@@ -352,12 +352,13 @@
             <input id="wzToken" placeholder="dán MÃ THIẾT LẬP từ log server">
             <div class="wz-tokhelp">
               <b>❓ Mã thiết lập là gì?</b> Jarvis đang chạy trên server công khai. Để chắc <b>chính bạn</b> (không phải người lạ vô tình mở link) là người tạo tài khoản admin, bạn dán một mã chỉ in ra <b>log server</b> — nơi duy nhất chủ máy xem được.
-              <br><b>Cách lấy mã (Hostinger):</b>
+              <br><b>Cách lấy mã (Hostinger → App terminal):</b>
               <ol>
-                <li>Mở app của bạn → bấm <b>App terminal</b> (hoặc vào mục <b>Logs</b>).</li>
-                <li>Chạy lệnh: <code>docker compose logs jarvis | grep "SETUP TOKEN"</code></li>
-                <li>Copy đoạn sau chữ <code>SETUP TOKEN:</code> rồi dán vào ô trên.</li>
+                <li>Mở app → bấm <b>App terminal</b> (bạn sẽ vào BÊN TRONG container <code>jarvis</code>).</li>
+                <li>Chạy: <code>cat /data/state/.setup_token</code></li>
+                <li>Copy chuỗi hiện ra → dán vào ô trên.</li>
               </ol>
+              <span class="dim">Nếu SSH vào HOST (không phải App terminal): <code>docker compose logs jarvis | grep "SETUP TOKEN"</code></span><br>
               💡 <b>Khỏi cần mã:</b> nếu lúc deploy bạn đặt sẵn env <code>JARVIS_ADMIN_PASSWORD</code> (+ <code>JARVIS_ADMIN_USER</code>), mở app ra là <b>đăng nhập luôn</b>, không hỏi mã.
             </div>
           </div>

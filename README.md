@@ -64,7 +64,7 @@ Hostinger tự pull image + cấp URL `https://<app>.<vps>.hstgr.cloud` + nút *
 1. **Để image GHCR ở chế độ Public:** GitHub → repo → **Packages** → `jarvis-os` → *Package settings* → Visibility = **Public**.
 2. **Tạo tài khoản admin** (chọn 1):
    - *Khuyến nghị:* thêm env `JARVIS_ADMIN_USER` + `JARVIS_ADMIN_PASSWORD` trong compose Hostinger → mở app **đăng nhập luôn**.
-   - *Hoặc:* mở app sẽ hỏi **MÃ THIẾT LẬP** — lấy trong App terminal: `docker compose logs jarvis | grep "SETUP TOKEN"`.
+   - *Hoặc:* mở app sẽ hỏi **MÃ THIẾT LẬP** — trong **App terminal** (vào bên trong container) chạy: `cat /data/state/.setup_token`.
 3. **Đăng nhập Claude (bộ não):** App terminal → `claude auth login --claudeai` → mở link, dán code.
 
 ### Cách 2 — Docker trên VPS bất kỳ (pull image, không cần clone)
@@ -209,7 +209,7 @@ Telegram ─────────────────┤→  FastAPI (ser
 | Sửa code mà không thấy đổi | Đã đổi `.py`? **Khởi động lại server** (Windows: `stop-jarvis.bat` → `start-jarvis.vbs`). Đổi giao diện? **Ctrl+Shift+R**. |
 | Port 7777 bị giữ, bản mới không lên | Kill tiến trình cũ TRƯỚC (`stop-jarvis.bat`, hoặc `taskkill /F /PID <pid>`), rồi start lại. |
 | Hostinger không pull được image | Để package GHCR = **Public**; đợi GitHub Action build xong (tab Actions). |
-| Mở app báo cần MÃ THIẾT LẬP | `docker compose logs jarvis \| grep "SETUP TOKEN"` để lấy mã (chỉ chủ server xem được). |
+| Mở app báo cần MÃ THIẾT LẬP | App terminal (trong container): `cat /data/state/.setup_token`. Trên host: `docker compose logs jarvis \| grep "SETUP TOKEN"`. Hoặc đặt env `JARVIS_ADMIN_PASSWORD` để khỏi cần mã. |
 | Claude báo chưa đăng nhập | Chạy 1 lần `claude auth login --claudeai` (Docker: trong App terminal). |
 | Trang Tệp tin treo "Đang tải" | Khởi động lại server để nạp endpoint mới, rồi Ctrl+Shift+R. |
 

@@ -25,9 +25,9 @@ màn **tạo tài khoản admin**.
 2. **Tạo tài khoản admin an toàn** (Claude chạy full quyền nên không để ai cũng tạo được):
    - **Cách A (khuyến nghị):** trong compose của Hostinger, thêm env `JARVIS_ADMIN_USER` +
      `JARVIS_ADMIN_PASSWORD` → admin tạo sẵn lúc khởi động, mở app ra **đăng nhập luôn**.
-   - **Cách B:** bỏ trống → mở app sẽ hỏi **MÃ THIẾT LẬP**. Lấy mã trong **App terminal**:
-     `docker compose logs jarvis | grep "SETUP TOKEN"` → dán vào màn tạo tài khoản. (Chỉ người xem
-     được log mới tạo được admin → kẻ chỉ có URL không chiếm được.)
+   - **Cách B:** bỏ trống → mở app sẽ hỏi **MÃ THIẾT LẬP**. Lấy mã trong **App terminal** (nó vào
+     BÊN TRONG container nên KHÔNG có lệnh `docker`): chạy `cat /data/state/.setup_token` → copy chuỗi
+     → dán vào màn tạo tài khoản. (Chỉ người xem được file/log mới tạo được admin → kẻ chỉ có URL bó tay.)
 3. **Đăng nhập Claude (bộ não) 1 lần:** mở **App terminal** và chạy:
    `claude auth login --claudeai` → mở link, dán code. (token lưu trong volume, không mất khi update.)
 
