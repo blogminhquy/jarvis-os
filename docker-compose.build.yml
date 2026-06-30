@@ -30,6 +30,7 @@ services:
       - jarvis-data:/data
       - jarvis-brains:/brains      # đổi sang  ./brains:/brains  nếu muốn git-backup (chown -R 10001 ./brains)
       - claude-auth:/home/jarvis/.claude
+      - codex-auth:/home/jarvis/.codex
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
       interval: 30s
@@ -41,3 +42,4 @@ volumes:
   jarvis-data:
   jarvis-brains:
   claude-auth:
+  codex-auth:

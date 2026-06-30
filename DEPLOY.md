@@ -165,3 +165,11 @@ Trên máy Windows của bạn, đẩy code lên GitHub: `git add -A && git comm
 "Bộ não" của Jarvis là Claude Code CLI. Token đăng nhập nằm trong `~/.claude`
 (Docker: volume `claude-auth`). Đăng nhập 1 lần → tồn tại qua mọi restart/update.
 Nếu đã đăng nhập trên máy khác, có thể copy thư mục `~/.claude` sang.
+
+## (Tuỳ chọn) Dùng ChatGPT (gói Plus) trong chat
+
+Provider **OpenAI OAuth (ChatGPT)** chat qua **Codex CLI** (đã cài sẵn trong image). Đăng nhập 1 lần:
+mở **App terminal** chạy `codex login` (mở link, đăng nhập ChatGPT). Token lưu ở `~/.codex`
+(Docker: volume `codex-auth`) → giữ qua mọi update. Kiểm tra: `codex --version`. Sau đó vào
+**Models → Đổi model → ChatGPT** là chat dùng được. (ChatGPT-qua-codex là thử nghiệm; muốn ổn
+định/đa model hơn thì dùng **OpenRouter** — 1 key mọi model — hoặc Claude.)

@@ -41,6 +41,7 @@ services:
       #   rồi 1 lần cấp quyền cho user non-root của container:  sudo chown -R 10001:10001 ./brains
       #   Sau đó: cd brains && git init && git add -A && git commit -m backup && git push
       - claude-auth:/home/jarvis/.claude        # token đăng nhập Claude (giữ qua mọi update!)
+      - codex-auth:/home/jarvis/.codex          # token đăng nhập ChatGPT/Codex (codex login — giữ qua update)
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
       interval: 30s
@@ -65,3 +66,4 @@ volumes:
   jarvis-data:
   jarvis-brains:
   claude-auth:
+  codex-auth:

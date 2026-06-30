@@ -38,6 +38,11 @@ RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CLI_VERSION}" \
     && npm cache clean --force \
     && claude --version
 
+# Codex CLI — cho provider ChatGPT subscription (OpenAI OAuth). BEST-EFFORT: lỗi cài KHÔNG làm hỏng
+# build (Claude vẫn chạy). Đăng nhập 1 lần bằng `codex login` trong terminal (token lưu ở volume .codex).
+RUN (npm install -g @openai/codex && npm cache clean --force && codex --version) \
+    || echo "[build] codex cài KHÔNG thành công — provider ChatGPT subscription sẽ không dùng được (các provider khác vẫn chạy)."
+
 WORKDIR /app
 
 # Layer-cached Python deps (copy requirements first so app changes don't re-pip).
@@ -49,7 +54,7 @@ COPY . .
 
 # Non-root runtime user. Code stays root-owned + read-only; state on volumes.
 RUN useradd -u 10001 -m -d /home/jarvis jarvis \
-    && mkdir -p /data/state /data/vault /brains /home/jarvis/.claude \
+    && mkdir -p /data/state /data/vault /brains /home/jarvis/.claude /home/jarvis/.codex \
     && chown -R jarvis:jarvis /data /brains /home/jarvis
 
 # Writable state under /data; ALL second brains under /brains (mount riêng → git-backup được).
@@ -65,8 +70,8 @@ ENV JARVIS_HOST=0.0.0.0 \
 
 USER jarvis
 
-# Persist state (/data) + brains (/brains) + the Claude auth token dir.
-VOLUME ["/data", "/brains", "/home/jarvis/.claude"]
+# Persist state (/data) + brains (/brains) + Claude auth + Codex auth (login ChatGPT).
+VOLUME ["/data", "/brains", "/home/jarvis/.claude", "/home/jarvis/.codex"]
 
 EXPOSE 7777
 
