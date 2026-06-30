@@ -6,7 +6,14 @@
   const editor = document.getElementById("studioEditor");
   const brain = () => (window.currentBrainPath ? currentBrainPath() : "brain");
   const esc = (s) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const api = async (p, o) => (await fetch(p, o)).json();
+  const api = async (p, o) => {
+    // Timeout 12s → loader hiện trạng thái rỗng thay vì kẹt "Đang tải..." mãi nếu server chậm/treo.
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    try { return await (await fetch(p, Object.assign({}, o, { signal: ctrl.signal }))).json(); }
+    catch (e) { return {}; }
+    finally { clearTimeout(t); }
+  };
   const fd = (obj) => { const f = new FormData(); Object.entries(obj).forEach(([k, v]) => f.append(k, v)); return f; };
 
   // Studio đã tách thành các trang sidebar riêng. openStudio = điều hướng rail (giữ tương thích

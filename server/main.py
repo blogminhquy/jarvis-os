@@ -1495,6 +1495,30 @@ async def new_brain(name: str = Form(...)):
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     return {"ok": True, "name": safe, "path": str(root)}
 
+
+@app.post("/brains/delete")
+async def delete_brain(name: str = Form(...), confirm: str = Form("")):
+    """Xoá HẲN 1 brain (cả thư mục) — toàn bộ tri thức trong não đó. Yêu cầu confirm == name (gõ tay).
+    CHẶN xoá brain mặc định + chỉ xoá folder NẰM TRONG BRAINS_DIR (không đụng folder ngoài)."""
+    safe = _safe_brain_name(name)
+    if not safe:
+        return JSONResponse({"ok": False, "error": "Tên brain không hợp lệ"}, status_code=400)
+    if (confirm or "").strip() != safe:
+        return JSONResponse({"ok": False, "error": "Xác nhận không khớp tên brain"}, status_code=400)
+    root = (Path(BRAINS_DIR) / safe).resolve()
+    base = Path(BRAINS_DIR).resolve()
+    if root == base or base not in root.parents:
+        return JSONResponse({"ok": False, "error": "Brain ngoài phạm vi quản lý"}, status_code=400)
+    if root == _default_brain_dir().resolve():
+        return JSONResponse({"ok": False, "error": "Không thể xoá Brain mặc định"}, status_code=400)
+    if not root.is_dir():
+        return JSONResponse({"ok": False, "error": "Brain không tồn tại"}, status_code=404)
+    try:
+        shutil.rmtree(str(root))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "name": safe}
+
 # ============================================================
 # STUDIO — Agents / Skills / Workflows
 # ============================================================

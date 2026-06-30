@@ -415,7 +415,15 @@
   }
 
   async function freshSettings() {
-    try { _settings = await (await fetch("/settings")).json(); } catch (e) {}
+    // Timeout 6s: nếu /settings chậm/treo thì KHÔNG để panel kẹt "Đang tải..." mãi — dùng cache cũ
+    // (hoặc {}) để vẫn hiện providers/cấu hình ngay, refresh lần sau.
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch("/settings", { signal: ctrl.signal });
+      clearTimeout(t);
+      _settings = await r.json();
+    } catch (e) { /* giữ _settings cũ */ }
     return _settings || {};
   }
 
