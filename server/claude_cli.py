@@ -123,6 +123,90 @@ def auth_login():
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
 
 
+# ---- Đăng nhập Claude NGAY TRÊN UI (chạy được cả VPS headless) ----
+# Chạy `claude auth login --claudeai` với pipe: đọc LINK nó in cho user mở, nhận CODE user dán rồi
+# ghi vào stdin. Trạng thái giữ ở _LOGIN (1 phiên 1 lúc là đủ). KHÔNG mở browser trên server.
+import re as _re_login
+_LOGIN = {"proc": None, "url": "", "done": False, "error": "", "lines": []}
+_LOGIN_URL_RE = _re_login.compile(r"https?://\S+")
+
+
+def auth_login_ui_start():
+    cli = find_claude_cli()
+    if not cli:
+        return {"ok": False, "error": "Claude CLI chưa cài"}
+    try:
+        if _LOGIN["proc"] and _LOGIN["proc"].poll() is None:
+            _kill_tree(_LOGIN["proc"])
+    except Exception:
+        pass
+    _LOGIN.update({"proc": None, "url": "", "done": False, "error": "", "lines": []})
+    try:
+        proc = subprocess.Popen(
+            [cli, "auth", "login", "--claudeai"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, encoding="utf-8", errors="replace", bufsize=1,
+            creationflags=_no_window(), start_new_session=(os.name != "nt"),
+        )
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+    _LOGIN["proc"] = proc
+
+    def _reader():
+        try:
+            for line in proc.stdout:
+                line = line.rstrip()
+                if not line:
+                    continue
+                _LOGIN["lines"].append(line)
+                if not _LOGIN["url"]:
+                    m = _LOGIN_URL_RE.search(line)
+                    if m:
+                        _LOGIN["url"] = m.group(0)
+                low = line.lower()
+                if "success" in low or "logged in" in low:
+                    _LOGIN["done"] = True
+                elif "error" in low or "failed" in low or "invalid" in low:
+                    _LOGIN["error"] = line
+        except Exception as e:
+            _LOGIN["error"] = f"{type(e).__name__}: {e}"
+        finally:
+            try:
+                if proc.poll() is not None and proc.returncode == 0:
+                    _LOGIN["done"] = True
+            except Exception:
+                pass
+    threading.Thread(target=_reader, daemon=True).start()
+    for _ in range(60):   # đợi tối đa ~12s để có URL / xong sớm / lỗi
+        if _LOGIN["url"] or _LOGIN["done"] or _LOGIN["error"]:
+            break
+        time.sleep(0.2)
+    if not (_LOGIN["url"] or _LOGIN["done"] or _LOGIN["error"]):
+        return {"ok": False, "error": "Không lấy được link đăng nhập (claude CLI không in URL)."}
+    return {"ok": True, "url": _LOGIN["url"], "done": _LOGIN["done"], "error": _LOGIN["error"]}
+
+
+def auth_login_ui_code(code):
+    proc = _LOGIN.get("proc")
+    if not proc:
+        return {"ok": False, "error": "Chưa bắt đầu đăng nhập (bấm Đăng nhập trước)."}
+    try:
+        proc.stdin.write((code or "").strip() + "\n")
+        proc.stdin.flush()
+    except Exception as e:
+        return {"ok": False, "error": f"Không gửi được code: {e}"}
+    for _ in range(120):   # ~24s
+        if _LOGIN["done"]:
+            return {"ok": True}
+        if _LOGIN["error"]:
+            return {"ok": False, "error": _LOGIN["error"]}
+        if proc.poll() is not None:
+            return {"ok": proc.returncode == 0,
+                    "error": "" if proc.returncode == 0 else "Đăng nhập thất bại — thử lại."}
+        time.sleep(0.2)
+    return {"ok": _LOGIN["done"], "error": _LOGIN.get("error", "")}
+
+
 # ---- MCP native (cho server OAuth — Claude Code tự lo OAuth; scope user = dùng chung mọi cwd) ----
 def mcp_native_add(name, url, transport="http", header=None, client_id=None):
     cli = find_claude_cli()

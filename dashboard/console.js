@@ -647,9 +647,8 @@
         <button class="gcard-btn" id="cliRecheck" style="background:transparent;opacity:.75">↻ Kiểm tra lại</button>
         <span id="cliMsg" class="gcard-meta" style="margin-left:10px;flex:1"></span>
         <div class="prov-note" style="margin-top:8px;line-height:1.6">
-          💻 <b>Trên VPS/server</b> (không có màn hình) nút trên KHÔNG mở được trình duyệt — hãy mở
-          <b>App terminal</b> chạy: <code>claude auth login --claudeai</code> → mở link → dán code →
-          rồi bấm <b>↻ Kiểm tra lại</b>.
+          Bấm <b>Đăng nhập Claude</b> → hiện link → mở link đăng nhập claude.ai → dán code (nếu trang yêu cầu) vào ô.
+          Chạy được cả trên VPS. (Hoặc terminal: <code>claude auth login --claudeai</code>.)
         </div>`;
       el.querySelector("#cliLogin").onclick = () => startClaudeLogin(el);
       el.querySelector("#cliRecheck").onclick = () => refreshClaudeCard(el);
@@ -657,18 +656,46 @@
   }
 
   async function startClaudeLogin(el) {
+    const act = el.querySelector("#cliAction");
     const msg = el.querySelector("#cliMsg");
-    if (msg) msg.textContent = "Đang mở trình duyệt… (VPS không màn hình thì dùng terminal: claude auth login --claudeai)";
-    try { await fetch("/claude/login", { method: "POST" }); } catch (e) {}
+    if (msg) msg.textContent = "Đang lấy link đăng nhập…";
+    let r;
+    try { r = await (await fetch("/claude/login-start", { method: "POST" })).json(); }
+    catch (e) { if (msg) msg.textContent = "Lỗi mạng."; return; }
+    if (!r.ok) { if (msg) msg.textContent = "⚠ " + (r.error || "Không bắt đầu được đăng nhập."); return; }
+    if (act) act.innerHTML = `
+      <div class="prov-note" style="line-height:1.7">
+        <b>1)</b> Mở link này để đăng nhập claude.ai:<br>
+        <a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:#7aa2ff;word-break:break-all">${esc(r.url || "(không có link)")}</a><br>
+        <b>2)</b> Đăng nhập xong, nếu trang hiện <b>một mã code</b> thì dán vào đây:
+        <div style="margin-top:6px;display:flex;gap:8px;max-width:520px">
+          <input class="js-input" id="cliCode" placeholder="dán code (nếu có)" style="flex:1">
+          <button class="gcard-btn" id="cliCodeBtn">Gửi code</button>
+        </div>
+        <span id="cliMsg2" class="gcard-meta"></span>
+      </div>`;
+    const m2 = el.querySelector("#cliMsg2");
+    let stopped = false;
     const t0 = Date.now();
-    const poll = async () => {
-      if (Date.now() - t0 > 5 * 60 * 1000) { if (msg) msg.textContent = "Hết thời gian, thử lại."; return; }
-      let d;
-      try { d = await (await fetch("/claude/status")).json(); } catch (e) { setTimeout(poll, 3000); return; }
-      if (d.connected) { refreshClaudeCard(el); return; }
+    const poll = async () => {   // tự hoàn tất (một số luồng không cần dán code)
+      if (stopped) return;
+      if (Date.now() - t0 > 5 * 60 * 1000) { if (m2) m2.textContent = "Hết thời gian, thử lại."; return; }
+      let d; try { d = await (await fetch("/claude/status")).json(); } catch (e) { setTimeout(poll, 3000); return; }
+      if (d.connected) { stopped = true; refreshClaudeCard(el); return; }
       setTimeout(poll, 3000);
     };
     setTimeout(poll, 3000);
+    const cb = el.querySelector("#cliCodeBtn");
+    if (cb) cb.onclick = async () => {
+      const code = (el.querySelector("#cliCode").value || "").trim();
+      if (m2) m2.textContent = "Đang xác nhận…";
+      const fd = new FormData(); fd.append("code", code);
+      let rr;
+      try { rr = await (await fetch("/claude/login-code", { method: "POST", body: fd })).json(); }
+      catch (e) { if (m2) m2.textContent = "Lỗi mạng."; return; }
+      if (rr.ok) { stopped = true; refreshClaudeCard(el); }
+      else if (m2) m2.textContent = "⚠ " + (rr.error || "Code sai, thử lại.");
+    };
   }
 
   // ---- ChatGPT OAuth device-code: lấy mã → mở link → poll tới khi kết nối ----
@@ -959,7 +986,7 @@
       if (!d.enabled) line = "⚪ Bot CHƯA bật — tích 'Bật bot Telegram' rồi Lưu (test gửi được KHÔNG có nghĩa bot đang nhận tin).";
       else if (!d.token_set) line = "⚪ Chưa có bot token.";
       else if (d.status === "polling") line = "🟢 Bot đang nhận tin — nhắn cho bot là Jarvis trả lời.";
-      else if (d.status === "conflict") line = "🔴 TRÙNG TOKEN (409): token đang bị poll ở nơi khác (vd Jarvis local của bạn vẫn bật bot). Tắt bot ở nơi kia — 1 token chỉ chạy 1 nơi.";
+      else if (d.status === "conflict") line = "🔴 409: " + (d.last_error || "token bị poll nơi khác hoặc còn webhook") + " — bot tự xoá webhook khi khởi động; nếu vẫn lỗi thì có nơi khác đang poll cùng token.";
       else if (d.status === "error") line = "⚠ Lỗi bot: " + (d.last_error || "");
       else if (d.status === "starting") line = "⏳ Đang khởi động bot…";
       else line = "⚪ Bot đã tắt.";

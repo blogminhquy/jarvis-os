@@ -81,6 +81,11 @@ class TelegramBot:
             except Exception:
                 pass
             try:
+                # Webhook bật thì getUpdates trả 409 → xoá webhook trước khi long-poll (no-op nếu không có).
+                await client.post(self._url("deleteWebhook"))
+            except Exception as e:
+                print(f"[telegram deleteWebhook] {e}", file=sys.stderr)
+            try:
                 await client.post(self._url("setMyCommands"), json={"commands": BOT_COMMANDS})
             except Exception as e:
                 print(f"[telegram setMyCommands] {e}", file=sys.stderr)
@@ -93,7 +98,7 @@ class TelegramBot:
                     if not data.get("ok"):
                         if data.get("error_code") == 409:
                             self.status = "conflict"
-                            self.last_error = "Token đang được poll ở nơi khác — chỉ bật bot ở 1 nơi."
+                            self.last_error = data.get("description") or "409 — token bị poll nơi khác hoặc còn webhook."
                             print("[telegram] 409 CONFLICT — cùng token đang poll ở nơi khác. Chỉ chạy 1 nơi.", file=sys.stderr)
                             await asyncio.sleep(20)
                         else:

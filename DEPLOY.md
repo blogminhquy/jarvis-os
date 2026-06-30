@@ -60,6 +60,18 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`jarvis-data`, `cla
 
 ### 🔒 HTTPS tự động
 
+> ⚠️ **Voice/mic BẮT BUỘC HTTPS.** Trình duyệt chỉ cho cấp quyền micro/camera trên `https://` (hoặc
+> localhost) — mở bằng `http://<ip>:7777` thì mic luôn bị chặn, KHÔNG bật tay được. **Không có chứng
+> chỉ HTTPS nào cấp cho IP trần** → muốn mic chạy phải dùng 1 trong các cách dưới (tên miền hoặc tunnel).
+>
+> **Nhanh nhất (không cần tên miền) — Cloudflare Tunnel:**
+> ```bash
+> docker compose --profile tunnel up -d
+> docker compose logs tunnel | grep trycloudflare
+> ```
+> → mở URL `https://...trycloudflare.com` → mic + voice chạy. (URL đổi mỗi restart; muốn cố định →
+> *named tunnel* + `TUNNEL_TOKEN`, xem mục Cloudflare Tunnel bên dưới.)
+
 **Hostinger Docker Manager:** Hostinger cấp HTTPS sẵn — mở app bằng `https://...` (URL của bạn).
 Nếu chỉ có HTTP, vào phần **Domains / SSL** của Hostinger để gán tên miền (có SSL) cho app.
 (Caddy bên dưới KHÔNG chạy được trên Hostinger vì cổng 80/443 đã bị proxy của họ chiếm.)

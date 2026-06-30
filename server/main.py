@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from claude_cli import ClaudeCLI, CodexCLI, find_claude_cli, find_codex_cli, cancel_all, auth_status as claude_auth_status, auth_login as claude_auth_login, auth_logout as claude_auth_logout, mcp_native_add, mcp_native_remove, mcp_native_status, mcp_open_auth_terminal, mcp_native_list
+from claude_cli import ClaudeCLI, CodexCLI, find_claude_cli, find_codex_cli, cancel_all, auth_status as claude_auth_status, auth_login as claude_auth_login, auth_logout as claude_auth_logout, auth_login_ui_start, auth_login_ui_code, mcp_native_add, mcp_native_remove, mcp_native_status, mcp_open_auth_terminal, mcp_native_list
 from graph_builder import build_graph, _color_for, _top_folder, WIKILINK_RE
 import config as cfgmod
 import engine
@@ -626,6 +626,18 @@ def claude_status():
 @app.post("/claude/login")
 def claude_login():
     return claude_auth_login()
+
+
+@app.post("/claude/login-start")
+def claude_login_start():
+    """Đăng nhập Claude NGAY TRÊN UI: trả link để user mở (chạy được trên VPS headless)."""
+    return auth_login_ui_start()
+
+
+@app.post("/claude/login-code")
+def claude_login_code(code: str = Form("")):
+    """Nhận code user dán sau khi mở link đăng nhập."""
+    return auth_login_ui_code(code)
 
 
 @app.post("/claude/logout")
