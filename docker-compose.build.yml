@@ -21,12 +21,14 @@ services:
       JARVIS_REQUIRE_LOGIN: "1"
       JARVIS_STATE_DIR: /data/state
       BRAIN_PATH: /data/brain
+      BRAINS_DIR: /brains
       OBSIDIAN_VAULT_PATH: /data/vault
       CLAUDE_CWD: /app
     ports:
       - "7777:7777"
     volumes:
       - jarvis-data:/data
+      - jarvis-brains:/brains      # đổi sang  ./brains:/brains  nếu muốn git-backup (chown -R 10001 ./brains)
       - claude-auth:/home/jarvis/.claude
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
@@ -37,4 +39,5 @@ services:
 
 volumes:
   jarvis-data:
+  jarvis-brains:
   claude-auth:

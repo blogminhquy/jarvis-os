@@ -30,12 +30,23 @@ brain/Memory/
 # Dev artifact — clone Hermes để học (rất nặng, có .git riêng)
 .learn/
 
-# Dữ liệu CÁ NHÂN trong brain mặc định (không version): bộ nhớ, cache số liệu KD,
+# Thư mục CHA chứa MỌI second brain (mô hình mới) — DỮ LIỆU CÁ NHÂN, không đẩy vào repo code.
+# Backup riêng lên git repo khác (xem comment bind-mount trong docker-compose.yml).
+brains/
+
+# Dữ liệu CÁ NHÂN trong brain mặc định CŨ (không version): bộ nhớ, cache số liệu KD,
 # automations (chứa chat_id). Cấu trúc thư mục + agent/workflow mẫu vẫn được version.
 Brain Default/Memory/
 Brain Default/05 - Data Cache/
 Brain Default/Attachments/
 Brain Default/Jarvis/automations.json
+
+# Brain Default mẫu sau khi gom vào brain/ — chỉ commit cấu trúc + agent/workflow mẫu,
+# KHÔNG commit dữ liệu cá nhân (bộ nhớ, cache số liệu KD, attachments, automations chứa chat_id).
+brain/Brain Default/Memory/
+brain/Brain Default/05 - Data Cache/
+brain/Brain Default/Attachments/
+brain/Brain Default/Jarvis/automations.json
 
 # Skill bị tắt (chuyển vào .disabled khi tắt) — trạng thái cục bộ, không version
 **/.claude/skills/.disabled/

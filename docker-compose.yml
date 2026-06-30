@@ -28,12 +28,18 @@ services:
       JARVIS_REQUIRE_LOGIN: "1"     # ÉP đăng nhập/đăng ký khi mở app (public)
       JARVIS_STATE_DIR: /data/state
       BRAIN_PATH: /data/brain
+      BRAINS_DIR: /brains          # thư mục CHA chứa MỌI second brain (mỗi folder con = 1 brain)
       OBSIDIAN_VAULT_PATH: /data/vault
       CLAUDE_CWD: /app
     ports:
       - "7777:7777"                 # Hostinger proxy / VPS map vào cổng này → cấp URL công khai
     volumes:
-      - jarvis-data:/data                       # brain/, vault/, state/ (settings, sessions, loop)
+      - jarvis-data:/data                       # state: settings/mật khẩu/sessions/loop (có secret → KHÔNG git)
+      - jarvis-brains:/brains                   # MỌI second brain (kiến thức của bạn) — bền qua mọi update
+      # ↑ Muốn BACKUP brain lên GitHub: đổi dòng trên thành bind-mount thư mục thật trên VPS, vd:
+      #     - ./brains:/brains
+      #   rồi 1 lần cấp quyền cho user non-root của container:  sudo chown -R 10001:10001 ./brains
+      #   Sau đó: cd brains && git init && git add -A && git commit -m backup && git push
       - claude-auth:/home/jarvis/.claude        # token đăng nhập Claude (giữ qua mọi update!)
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
@@ -57,4 +63,5 @@ services:
 
 volumes:
   jarvis-data:
+  jarvis-brains:
   claude-auth:

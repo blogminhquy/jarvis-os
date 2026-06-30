@@ -10,6 +10,7 @@ import sys
 import shutil
 import subprocess
 import threading
+import time
 import traceback
 from pathlib import Path
 from typing import AsyncIterator, Optional
@@ -35,6 +36,24 @@ def cancel_all(tag=None):
         except Exception:
             pass
     return len(procs)
+
+
+def _kill_tree(p):
+    """Giết 1 tiến trình claude/codex VÀ TOÀN BỘ cây con (node) — dùng cho watchdog idle-timeout.
+    Tiến trình treo (kẹt auth / flail trên path không tồn tại) nếu không giết sẽ sống mãi, ngốn
+    RAM/CPU và làm treo server một-tiến-trình. POSIX dùng killpg (cần start_new_session=True)."""
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)],
+                           capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            import signal as _signal
+            try:
+                os.killpg(os.getpgid(p.pid), _signal.SIGKILL)
+            except Exception:
+                p.kill()
+    except Exception:
+        pass
 
 
 def find_claude_cli() -> Optional[str]:
@@ -258,8 +277,14 @@ class ClaudeCLI:
         SENTINEL = object()
 
         def reader_thread():
-            """Chạy subprocess trong thread, đẩy từng dòng vào queue."""
+            """Chạy subprocess trong thread, đẩy từng dòng vào queue.
+            WATCHDOG idle-timeout: claude không in gì trong IDLE giây (treo / kẹt auth / flail trên
+            path không tồn tại) → giết cả cây tiến trình (claude + node con). Chống tích tụ tiến
+            trình treo làm đói tài nguyên → treo server. Chỉnh bằng JARVIS_CLAUDE_IDLE_TIMEOUT."""
             proc = None
+            tinfo = {"timed_out": False}
+            last = {"t": time.time()}            # cập nhật mỗi dòng stdout → "còn sống"
+            IDLE = float(os.getenv("JARVIS_CLAUDE_IDLE_TIMEOUT", "180"))
             try:
                 # CREATE_NO_WINDOW để không pop cửa sổ cmd trên Windows
                 creationflags = 0
@@ -276,9 +301,22 @@ class ClaudeCLI:
                     errors="replace",
                     bufsize=1,
                     creationflags=creationflags,
+                    start_new_session=(os.name != "nt"),  # nhóm tiến trình riêng → killpg giết cả cây
                 )
                 with _PROC_LOCK:
                     _ACTIVE_PROCS[proc] = self.tag
+
+                def _watchdog(p):
+                    while p.poll() is None:
+                        if time.time() - last["t"] > IDLE:
+                            tinfo["timed_out"] = True
+                            _kill_tree(p)
+                            asyncio.run_coroutine_threadsafe(queue.put({"__error__":
+                                f"Claude không phản hồi {int(IDLE)}s — đã dừng để tránh treo server. "
+                                f"(tăng JARVIS_CLAUDE_IDLE_TIMEOUT nếu tác vụ thật sự dài)"}), loop)
+                            return
+                        time.sleep(5)
+                threading.Thread(target=_watchdog, args=(proc,), daemon=True).start()
 
                 # Đọc stderr riêng trong thread phụ
                 stderr_lines = []
@@ -293,6 +331,7 @@ class ClaudeCLI:
 
                 # Đọc stdout dòng-dòng, đẩy vào queue
                 for line in proc.stdout:
+                    last["t"] = time.time()
                     line = line.strip()
                     if line:
                         asyncio.run_coroutine_threadsafe(queue.put(line), loop)
@@ -300,7 +339,7 @@ class ClaudeCLI:
                 proc.wait()
                 stderr_thread.join(timeout=2)
 
-                if proc.returncode != 0 and stderr_lines:
+                if proc.returncode not in (0, None) and stderr_lines and not tinfo["timed_out"]:
                     err_msg = "Claude CLI lỗi (exit " + str(proc.returncode) + "):\n" + "\n".join(stderr_lines[-5:])
                     asyncio.run_coroutine_threadsafe(queue.put({"__error__": err_msg}), loop)
 
@@ -445,15 +484,30 @@ class CodexCLI:
 
         def reader_thread():
             proc = None
+            tinfo = {"timed_out": False}
+            last = {"t": time.time()}
+            IDLE = float(os.getenv("JARVIS_CLAUDE_IDLE_TIMEOUT", "180"))
             try:
                 creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
                 proc = subprocess.Popen(
                     args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     cwd=self.cwd, text=True, encoding="utf-8", errors="replace", bufsize=1,
-                    creationflags=creationflags,
+                    creationflags=creationflags, start_new_session=(os.name != "nt"),
                 )
                 with _PROC_LOCK:
                     _ACTIVE_PROCS[proc] = self.tag
+
+                def _watchdog(p):
+                    while p.poll() is None:
+                        if time.time() - last["t"] > IDLE:
+                            tinfo["timed_out"] = True
+                            _kill_tree(p)
+                            asyncio.run_coroutine_threadsafe(queue.put({"__error__":
+                                f"Codex không phản hồi {int(IDLE)}s — đã dừng để tránh treo server."}), loop)
+                            return
+                        time.sleep(5)
+                threading.Thread(target=_watchdog, args=(proc,), daemon=True).start()
+
                 stderr_lines = []
 
                 def read_stderr():
@@ -464,12 +518,13 @@ class CodexCLI:
                 st = threading.Thread(target=read_stderr, daemon=True)
                 st.start()
                 for line in proc.stdout:
+                    last["t"] = time.time()
                     line = line.strip()
                     if line:
                         asyncio.run_coroutine_threadsafe(queue.put(line), loop)
                 proc.wait()
                 st.join(timeout=2)
-                if proc.returncode != 0 and stderr_lines:
+                if proc.returncode not in (0, None) and stderr_lines and not tinfo["timed_out"]:
                     asyncio.run_coroutine_threadsafe(
                         queue.put({"__error__": "Codex lỗi (exit " + str(proc.returncode) + "):\n" + "\n".join(stderr_lines[-5:])}), loop)
             except Exception as e:

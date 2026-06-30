@@ -242,15 +242,19 @@ CLAUDE_CWD = os.getenv("CLAUDE_CWD", str(Path(__file__).parent.parent))
 
 # Second Brain — gộp folder brain/ trong project + vault chính
 PROJECT_ROOT = Path(__file__).parent.parent
-BRAIN_PATH = os.getenv("BRAIN_PATH", str(PROJECT_ROOT / "brain"))
+BRAIN_PATH = os.getenv("BRAIN_PATH", str(PROJECT_ROOT / "brain"))   # LEGACY (brain đơn cũ) — chỉ dùng để migrate
+# Thư mục CHA chứa MỌI brain — mỗi folder con = 1 second brain. Docker = /brains (mount riêng,
+# git-backup được, KHÔNG nằm trong /data state). Local = <project>/brains. Brain mặc định =
+# <BRAINS_DIR>/Brain Default. KHÔNG hardcode: cấu hình qua env, chọn brain bất kỳ qua path:.
+BRAINS_DIR = os.getenv("BRAINS_DIR", str(PROJECT_ROOT / "brains"))
 # Default PORTABLE: vault/ trong repo (tạo lần đầu chạy). Trên VPS/máy khác đặt
 # OBSIDIAN_VAULT_PATH trong .env trỏ tới vault thật; để trống = dùng vault/.
 OBSIDIAN_VAULT_PATH = os.getenv("OBSIDIAN_VAULT_PATH", str(PROJECT_ROOT / "vault"))
 # Nơi lưu file đính kèm từ chat (source cho Second Brain)
 SOURCES_PATH = os.getenv("SOURCES_PATH", str(PROJECT_ROOT / "brain" / "01 - Sources"))
 
-# Tạo sẵn thư mục brain/vault để máy mới (VPS sạch) không crash vì thiếu folder.
-for _p in (BRAIN_PATH, OBSIDIAN_VAULT_PATH):
+# Tạo sẵn thư mục brains/vault để máy mới (VPS sạch) không crash vì thiếu folder.
+for _p in (BRAINS_DIR, OBSIDIAN_VAULT_PATH):
     try:
         Path(_p).mkdir(parents=True, exist_ok=True)
     except Exception:
@@ -1009,10 +1013,10 @@ def _resolve_graph_roots(source: str, path: str = None):
     if path:
         return [path]
     if source == "brain":
-        return [BRAIN_PATH]
+        return [str(_default_brain_dir())]
     if source == "vault":
         return [OBSIDIAN_VAULT_PATH]
-    return [BRAIN_PATH, OBSIDIAN_VAULT_PATH]
+    return [str(_default_brain_dir()), OBSIDIAN_VAULT_PATH]
 
 
 @app.get("/graph")
@@ -1138,12 +1142,16 @@ IMG_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp")
 STAGING = PROJECT_ROOT / ".staging"
 
 def _default_brain_dir() -> Path:
-    """Brain mặc định của project: ưu tiên 'Brain Default' (mới), fallback 'brain' (cũ)."""
-    new = PROJECT_ROOT / "Brain Default"
-    old = PROJECT_ROOT / "brain"
-    if new.is_dir() or not old.is_dir():
-        return new
-    return old
+    """Brain mặc định = <BRAINS_DIR>/Brain Default. BRAINS_DIR = thư mục CHA chứa mọi brain
+    (mỗi folder con = 1 brain). Docker = /brains (mount riêng, ghi được, git-backup được).
+    Local = <project>/brains. Đây là 'bộ não khởi đầu' — user vẫn chọn brain khác trong danh
+    sách hoặc folder ngoài bất kỳ qua 'path:<thư mục>'. KHÔNG hardcode vault cá nhân nào."""
+    p = Path(BRAINS_DIR) / "Brain Default"
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    return p
 
 def _brain_root(brain: str) -> str:
     if not brain or brain == "brain":
@@ -1167,7 +1175,7 @@ def _brain_sub(root, new_name: str, old_rel: str) -> Path:
 def _resolve_subfolder(root: str, name_regex: str, default_name: str) -> str:
     """Tìm (hoặc tạo) subfolder khớp regex trong root (vd Sources / Attachments)."""
     if not os.path.isdir(root):
-        root = str(PROJECT_ROOT / "brain")
+        root = str(_default_brain_dir())
     try:
         for name in os.listdir(root):
             full = os.path.join(root, name)
@@ -1312,6 +1320,69 @@ SCHEMA_SEED = (
     "Nguyên lý: Sources → (ingest) → Wiki. Tri thức tích luỹ, không tái phát hiện.\n"
 )
 
+def _ensure_brain_scaffold(root):
+    """Tạo cấu trúc chuẩn cho MỘT brain (idempotent): sources/agents/workflows/memory/wiki/
+    attachments + Jarvis/README + memory seed. Dùng cho brain mặc định lẫn brain mới tạo."""
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    present = {i["key"] for i in _check_structure(root) if i["present"]}
+    for it in STANDARD_STRUCTURE:
+        if it["key"] in present:
+            continue
+        try:
+            if it["kind"] in ("dir", "exact"):
+                (root / it["create"]).mkdir(parents=True, exist_ok=True)
+            elif it["kind"] == "file_any":
+                (root / it["create"]).write_text(SCHEMA_SEED, encoding="utf-8")
+        except Exception as e:
+            print(f"[brain scaffold] {it['key']}: {e}", file=__import__('sys').stderr)
+    jr = root / "Jarvis" / "README.md"
+    if not jr.exists():
+        jr.parent.mkdir(parents=True, exist_ok=True)
+        jr.write_text(JARVIS_README, encoding="utf-8")
+    try:
+        _brain_memory_dir(str(root))   # memory/ + MEMORY.md seed
+    except Exception:
+        pass
+
+
+def _ensure_default_brain():
+    """Seed brain mặc định (<BRAINS_DIR>/Brain Default) lúc khởi động → deploy mới có ngay 'bộ não
+    Jarvis khởi đầu', không hiện banner 'cấu trúc chưa chuẩn'."""
+    try:
+        _ensure_brain_scaffold(_default_brain_dir())
+    except Exception as e:
+        print(f"[brain scaffold] {e}", file=__import__('sys').stderr)
+
+
+def _migrate_legacy_brain():
+    """Chuyển dữ liệu brain CŨ sang <BRAINS_DIR>/Brain Default (mô hình mới: mọi brain trong BRAINS_DIR).
+    CHỈ chạy khi brain mặc định MỚI còn rỗng → KHÔNG ghi đè. Nguồn cũ thử lần lượt: /data/brain
+    (BRAIN_PATH), <project>/Brain Default, <project>/brain. An toàn, chạy lại nhiều lần vô hại."""
+    try:
+        new = _default_brain_dir()
+        if new.is_dir() and any(new.iterdir()):
+            return   # brain mặc định đã có dữ liệu → khỏi migrate
+        for old in (Path(BRAIN_PATH), PROJECT_ROOT / "Brain Default", PROJECT_ROOT / "brain"):
+            try:
+                if old.resolve() == new.resolve():
+                    continue
+                if old.is_dir() and any(old.iterdir()):
+                    new.parent.mkdir(parents=True, exist_ok=True)
+                    if new.exists():
+                        for item in old.iterdir():
+                            dst = new / item.name
+                            if not dst.exists():
+                                shutil.move(str(item), str(dst))
+                    else:
+                        shutil.move(str(old), str(new))
+                    print(f"[brain migrate] {old} → {new}", file=__import__('sys').stderr)
+                    return
+            except Exception as e:
+                print(f"[brain migrate] {old}: {e}", file=__import__('sys').stderr)
+    except Exception as e:
+        print(f"[brain migrate] {e}", file=__import__('sys').stderr)
+
 @app.get("/vault/check")
 async def vault_check(brain: str = Query("brain")):
     """Kiểm tra cấu trúc chuẩn của vault đang chọn."""
@@ -1374,6 +1445,54 @@ async def brain_migrate(brain: str = Form("brain")):
             except Exception as e:
                 skipped.append(f"{old_rel}: {e}")
     return {"ok": True, "root": str(root), "moved": moved, "skipped": skipped}
+
+
+def _safe_brain_name(name: str) -> str:
+    name = (name or "").strip().strip(".")
+    name = re.sub(r'[\\/:*?"<>|]+', "", name)
+    return name[:60].strip()
+
+
+@app.get("/brains")
+async def list_brains():
+    """Liệt kê mọi brain trong BRAINS_DIR (mỗi folder con = 1 brain) + số note .md.
+    Dropdown chọn brain đổ từ đây (server-side) thay vì localStorage."""
+    base = Path(BRAINS_DIR)
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    default = _default_brain_dir()
+    out = []
+    try:
+        for p in sorted(base.iterdir(), key=lambda x: x.name.lower()):
+            if not p.is_dir() or p.name.startswith("."):
+                continue
+            try:
+                notes = sum(1 for _ in p.rglob("*.md"))
+            except Exception:
+                notes = 0
+            out.append({"name": p.name, "path": str(p), "notes": notes,
+                        "is_default": p.resolve() == default.resolve()})
+    except Exception as e:
+        return {"dir": str(base), "brains": [], "error": str(e)}
+    return {"dir": str(base), "brains": out}
+
+
+@app.post("/brains/new")
+async def new_brain(name: str = Form(...)):
+    """Tạo brain mới = folder con trong BRAINS_DIR + seed cấu trúc chuẩn."""
+    safe = _safe_brain_name(name)
+    if not safe:
+        return JSONResponse({"ok": False, "error": "Tên brain không hợp lệ"}, status_code=400)
+    root = Path(BRAINS_DIR) / safe
+    if root.exists():
+        return JSONResponse({"ok": False, "error": "Brain đã tồn tại"}, status_code=400)
+    try:
+        _ensure_brain_scaffold(root)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+    return {"ok": True, "name": safe, "path": str(root)}
 
 # ============================================================
 # STUDIO — Agents / Skills / Workflows
@@ -2116,6 +2235,8 @@ async def _start_scheduler():
     # Bootstrap bảo mật cho deploy public: (1) tạo admin từ env nếu có; (2) nếu vẫn chưa có admin
     # mà đang public → in MÃ THIẾT LẬP ra log để chính chủ tạo tài khoản (chống kẻ chỉ-có-URL chiếm admin).
     import sys as _sys
+    _migrate_legacy_brain()   # dữ liệu brain cũ → <BRAINS_DIR>/Brain Default (không mất data)
+    _ensure_default_brain()   # brain mặc định có sẵn cấu trúc chuẩn (ghi được trên mount /brains)
     try:
         if cfgmod.provision_admin_from_env():
             print("[auth] Đã tạo tài khoản admin từ JARVIS_ADMIN_PASSWORD (env).", file=_sys.stderr)

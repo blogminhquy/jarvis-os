@@ -49,14 +49,15 @@ COPY . .
 
 # Non-root runtime user. Code stays root-owned + read-only; state on volumes.
 RUN useradd -u 10001 -m -d /home/jarvis jarvis \
-    && mkdir -p /data/state /data/brain /data/vault /home/jarvis/.claude \
-    && chown -R jarvis:jarvis /data /home/jarvis
+    && mkdir -p /data/state /data/vault /brains /home/jarvis/.claude \
+    && chown -R jarvis:jarvis /data /brains /home/jarvis
 
-# Writable state + brain/vault default under /data.
+# Writable state under /data; ALL second brains under /brains (mount riêng → git-backup được).
 ENV JARVIS_HOST=0.0.0.0 \
     JARVIS_PORT=7777 \
     JARVIS_STATE_DIR=/data/state \
     BRAIN_PATH=/data/brain \
+    BRAINS_DIR=/brains \
     OBSIDIAN_VAULT_PATH=/data/vault \
     CLAUDE_CWD=/app \
     HOME=/home/jarvis \
@@ -64,8 +65,8 @@ ENV JARVIS_HOST=0.0.0.0 \
 
 USER jarvis
 
-# Persist data (brain/vault/state) + the Claude auth token dir.
-VOLUME ["/data", "/home/jarvis/.claude"]
+# Persist state (/data) + brains (/brains) + the Claude auth token dir.
+VOLUME ["/data", "/brains", "/home/jarvis/.claude"]
 
 EXPOSE 7777
 

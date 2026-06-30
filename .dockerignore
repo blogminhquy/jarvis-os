@@ -11,6 +11,7 @@
 .staging/
 Brain Default/
 brain/
+brains/
 vault/
 server/settings.json
 server/.sessions.json
