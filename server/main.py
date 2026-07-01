@@ -39,7 +39,9 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) —
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
 _AUTH_PUBLIC_PREFIX = ("/static", "/health")
-_AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup")
+# /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
+_AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
+                      "/brand-logo", "/tls-check")
 
 
 @app.middleware("http")
@@ -283,6 +285,17 @@ def _session_cookie(resp, token, request=None):
     # tạo tài khoản xong vẫn bị hỏi lại từ đầu). Mặc định TẮT Secure để chạy được cả HTTP lẫn HTTPS.
     # Chỉ bật khi bạn CHẮC CHẮN HTTPS đầu-cuối: đặt env JARVIS_SECURE_COOKIE=1.
     secure = os.getenv("JARVIS_SECURE_COOKIE", "").strip().lower() in ("1", "true", "yes", "on")
+    # HTTPS thật qua TÊN MIỀN RIÊNG (Caddy On-Demand TLS): Host khớp custom domain → chắc chắn đi
+    # qua Caddy = HTTPS đầu-cuối → bật Secure. An toàn: KHÔNG suy từ X-Forwarded-Proto, và không
+    # ảnh hưởng bản localhost/Hostinger (Host khác custom domain → giữ nguyên như cũ).
+    if not secure and request is not None:
+        try:
+            host = (request.headers.get("host", "") or "").split(":")[0].strip().lower()
+            custom = (cfgmod.read_settings().get("domain", {}) or {}).get("custom", "").strip().lower()
+            if custom and host == custom:
+                secure = True
+        except Exception:
+            pass
     resp.set_cookie("jarvis_session", token, httponly=True, samesite="lax",
                     secure=secure, max_age=30 * 86400, path="/")
     return resp
@@ -2360,6 +2373,161 @@ async def config():
         "tts_voice": os.getenv("TTS_VOICE", "vi-VN-HoaiMyNeural"),
         "tts_rate": os.getenv("TTS_RATE", "+5%"),
     }
+
+
+# ============================================
+# Branding — logo/avatar đổi được qua UI (lưu ở STATE_DIR/branding, giữ qua update).
+# Trong Docker code tree read-only → KHÔNG ghi đè dashboard/logo.png; lưu ở volume state.
+# ============================================
+_LOGO_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+_DEFAULT_LOGO = DASHBOARD_PATH / "logo.png"
+_MAX_LOGO_BYTES = 5 * 1024 * 1024   # 5MB
+
+
+def _current_logo_file():
+    """File logo tùy chỉnh nếu có (theo branding.logo_ext), else None → dùng ảnh mặc định."""
+    ext = (cfgmod.read_settings().get("branding", {}) or {}).get("logo_ext", "")
+    if ext:
+        p = cfgmod.BRANDING_DIR / f"logo{ext}"
+        if p.exists():
+            return p
+    return None
+
+
+@app.get("/brand-logo")
+async def brand_logo():
+    p = _current_logo_file() or _DEFAULT_LOGO
+    if not p.exists():
+        return JSONResponse({"error": "no logo"}, status_code=404)
+    # cache ngắn: đổi ảnh xong thấy ngay trong ~1 phút; JS còn bust bằng ?v= khi vừa upload.
+    return FileResponse(str(p), headers={"Cache-Control": "public, max-age=60"})
+
+
+@app.post("/branding/logo")
+async def branding_logo_set(file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext == ".jpe":
+        ext = ".jpg"
+    if ext not in _LOGO_EXTS:
+        return JSONResponse({"ok": False, "error": "Chỉ nhận ảnh PNG / JPG / WEBP / GIF"}, status_code=400)
+    data = await file.read()
+    if not data:
+        return JSONResponse({"ok": False, "error": "File rỗng"}, status_code=400)
+    if len(data) > _MAX_LOGO_BYTES:
+        return JSONResponse({"ok": False, "error": "Ảnh quá lớn (tối đa 5MB)"}, status_code=400)
+    try:
+        cfgmod.BRANDING_DIR.mkdir(parents=True, exist_ok=True)
+        for old in cfgmod.BRANDING_DIR.glob("logo.*"):   # xoá ảnh cũ mọi đuôi, tránh file thừa
+            try:
+                old.unlink()
+            except Exception:
+                pass
+        (cfgmod.BRANDING_DIR / f"logo{ext}").write_bytes(data)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": f"Lưu ảnh thất bại: {e}"}, status_code=500)
+    cfg = cfgmod.read_settings()
+    cfg.setdefault("branding", {})
+    cfg["branding"]["logo_ext"] = ext
+    cfg["branding"]["logo_v"] = int(cfg["branding"].get("logo_v", 0) or 0) + 1
+    cfgmod.write_settings(cfg)
+    return {"ok": True, "logo_v": cfg["branding"]["logo_v"]}
+
+
+@app.post("/branding/logo/reset")
+async def branding_logo_reset():
+    try:
+        if cfgmod.BRANDING_DIR.exists():
+            for old in cfgmod.BRANDING_DIR.glob("logo.*"):
+                try:
+                    old.unlink()
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    cfg = cfgmod.read_settings()
+    cfg.setdefault("branding", {})
+    cfg["branding"]["logo_ext"] = ""
+    cfg["branding"]["logo_v"] = int(cfg["branding"].get("logo_v", 0) or 0) + 1
+    cfgmod.write_settings(cfg)
+    return {"ok": True}
+
+
+# ============================================
+# Tên miền riêng + HTTPS tự động (Caddy On-Demand TLS).
+# Caddy gọi /tls-check?domain=<host> TRƯỚC khi xin cert → chỉ cấp cho tên miền admin đã đặt.
+# ============================================
+_DOMAIN_RE = re.compile(r"^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+_PUBLIC_IP_CACHE = {"ip": None, "ts": 0.0}
+
+
+def _norm_domain(d):
+    d = (d or "").strip().lower()
+    d = d.replace("https://", "").replace("http://", "")
+    d = d.split("/")[0].split(":")[0].strip().strip(".")
+    return d
+
+
+def _detect_public_ip():
+    import time as _t
+    now = _t.time()
+    if _PUBLIC_IP_CACHE["ip"] and now - _PUBLIC_IP_CACHE["ts"] < 600:
+        return _PUBLIC_IP_CACHE["ip"]
+    ip = None
+    for url in ("https://api.ipify.org", "https://ifconfig.me/ip", "https://icanhazip.com"):
+        try:
+            import urllib.request
+            with urllib.request.urlopen(url, timeout=4) as r:
+                ip = (r.read().decode() or "").strip()
+            if ip:
+                break
+        except Exception:
+            ip = None
+    if ip:
+        _PUBLIC_IP_CACHE.update(ip=ip, ts=now)
+    return ip
+
+
+@app.get("/tls-check")
+async def tls_check(domain: str = ""):
+    """Cổng gác cho Caddy On-Demand TLS: chỉ 200 khi hostname == tên miền admin đã đặt,
+    chống kẻ trỏ DNS bừa vào IP ép server xin cert vô hạn (cạn rate-limit Let's Encrypt)."""
+    want = _norm_domain((cfgmod.read_settings().get("domain", {}) or {}).get("custom", ""))
+    got = _norm_domain(domain)
+    if want and got and got == want:
+        return JSONResponse({"ok": True})
+    return JSONResponse({"ok": False}, status_code=403)
+
+
+@app.post("/domain")
+async def domain_set(domain: str = Form("")):
+    d = _norm_domain(domain)
+    if d and not _DOMAIN_RE.match(d):
+        return JSONResponse({"ok": False, "error": "Tên miền không hợp lệ (vd: jarvis.tencuaban.com)"}, status_code=400)
+    cfg = cfgmod.read_settings()
+    cfg.setdefault("domain", {})
+    cfg["domain"]["custom"] = d
+    cfgmod.write_settings(cfg)
+    return {"ok": True, "domain": d}
+
+
+@app.get("/domain/status")
+async def domain_status(request: Request):
+    cfg = cfgmod.read_settings()
+    custom = _norm_domain((cfg.get("domain", {}) or {}).get("custom", ""))
+    server_ip = _detect_public_ip()
+    dns_ip = None
+    dns_ok = False
+    if custom:
+        try:
+            import socket as _sock
+            dns_ip = _sock.gethostbyname(custom)
+            dns_ok = bool(server_ip) and dns_ip == server_ip
+        except Exception:
+            dns_ip = None
+    host = (request.headers.get("host", "") or "").split(":")[0].strip().lower()
+    on_domain = bool(custom) and host == custom
+    return {"domain": custom, "server_ip": server_ip, "dns_ip": dns_ip,
+            "dns_ok": dns_ok, "on_domain": on_domain}
 
 
 # ============================================

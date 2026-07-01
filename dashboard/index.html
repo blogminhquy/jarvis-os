@@ -14,7 +14,7 @@
 
     <!-- ===== TOP BAR ===== -->
     <header class="hud-top">
-      <div class="brand"><span class="brand-icon"><img src="/static/logo.png?v=1" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:middle"></span> <span class="brand-text">JARVIS OS</span></div>
+      <div class="brand"><span class="brand-icon"><img src="/brand-logo" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:middle;object-fit:cover"></span> <span class="brand-text">JARVIS OS</span></div>
       <!-- Select Brain: dời từ góc graph lên navbar (trái) -->
       <div class="orb-graph-ctl navbar-brain">
         <select id="graphSource" class="graph-select">
@@ -251,7 +251,7 @@
   <nav class="rail" x-data x-cloak>
     <!-- ĐỈNH cố định -->
     <div class="rail-top">
-      <div class="rail-brand"><img src="/static/logo.png?v=1" alt="Jarvis" style="width:30px;height:30px;border-radius:8px;display:block"></div>
+      <div class="rail-brand"><img src="/brand-logo" alt="Jarvis" style="width:30px;height:30px;border-radius:8px;display:block;object-fit:cover"></div>
     </div>
     <!-- GIỮA cuộn được — nhồi bao nhiêu tính năng cũng cuộn -->
     <div class="rail-nav">
@@ -327,7 +327,7 @@
   <!-- Bộ cài đặt lần đầu (hiện khi chưa setup_done) -->
   <div class="modal-overlay" id="setupWizard">
     <div class="settings-modal" style="max-width:460px">
-      <div class="fm-head"><img src="/static/logo.png?v=1" alt="" style="width:24px;height:24px;border-radius:6px;vertical-align:middle;margin-right:6px"><span>Chào mừng tới Jarvis</span></div>
+      <div class="fm-head"><img src="/brand-logo" alt="" style="width:24px;height:24px;border-radius:6px;vertical-align:middle;margin-right:6px;object-fit:cover"><span>Chào mừng tới Jarvis</span></div>
       <div class="settings-body">
         <style>
         .wz-prov{display:flex;flex-direction:column;gap:8px;margin-top:6px}
@@ -402,7 +402,7 @@
   <!-- Đăng nhập (chỉ hiện khi admin đã đặt mật khẩu & chưa đăng nhập) -->
   <div class="modal-overlay" id="authOverlay">
     <div class="folder-modal auth-modal">
-      <div class="fm-head"><img src="/static/logo.png?v=1" alt="" style="width:24px;height:24px;border-radius:6px;vertical-align:middle;margin-right:6px"><span id="authTitle">Đăng nhập Jarvis</span></div>
+      <div class="fm-head"><img src="/brand-logo" alt="" style="width:24px;height:24px;border-radius:6px;vertical-align:middle;margin-right:6px;object-fit:cover"><span id="authTitle">Đăng nhập Jarvis</span></div>
       <div class="auth-body">
         <input id="authUser" placeholder="Tài khoản" autocomplete="username">
         <input id="authPass" type="password" placeholder="Mật khẩu" autocomplete="current-password">
@@ -474,6 +474,32 @@
           </div>
           <div class="set-note">Đặt mật khẩu để chặn người lạ khi đưa Jarvis lên VPS. Lưu ý: trên VPS nên chạy sau HTTPS (reverse proxy).</div>
         </div>
+        <div class="set-sec">
+          <h4>Ảnh đại diện / Logo</h4>
+          <div class="set-note">Ảnh hiển thị ở góc trên, thanh bên và cả màn đăng nhập. Đổi 1 chỗ, áp dụng mọi nơi.</div>
+          <div style="display:flex;align-items:center;gap:14px;margin:8px 0">
+            <img id="brandLogoPreview" src="/brand-logo" alt="logo"
+                 style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.15)">
+            <div class="set-actions" style="margin:0">
+              <label class="s-btn" style="cursor:pointer;display:inline-block">Tải ảnh lên
+                <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+              <button class="s-btn-ghost" id="brandLogoReset">Khôi phục mặc định</button>
+            </div>
+          </div>
+          <div class="set-note" id="brandLogoStatus"></div>
+        </div>
+        <div class="set-sec">
+          <h4>Tên miền riêng (HTTPS)</h4>
+          <div class="set-note">Trỏ tên miền của bạn vào Jarvis, tự động có HTTPS. Chỉ chạy khi deploy Docker trên VPS (mở cổng 80/443) — Hostinger 1-click dùng SSL sẵn của họ.</div>
+          <label>Tên miền</label>
+          <input id="setDomain" placeholder="vd: jarvis.tencuaban.com">
+          <div class="set-actions">
+            <button class="s-btn" id="saveDomain">Lưu tên miền</button>
+            <button class="s-btn-ghost" id="checkDomain">Kiểm tra kết nối</button>
+          </div>
+          <div id="domainGuide" style="display:none;margin-top:8px;font-size:14px;line-height:1.6;color:#cdd8ee"></div>
+          <div class="set-note" id="domainStatus"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -483,6 +509,7 @@
   <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
   <script src="/static/graph3d.js?v=13"></script>
   <script src="/static/app.js?v=45"></script>
+  <script src="/static/branding.js?v=1"></script>
   <script src="/static/brains-ui.js?v=2"></script>
   <script src="/static/sessions-ui.js?v=1"></script>
   <script src="/static/studio.js?v=11"></script>

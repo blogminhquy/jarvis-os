@@ -19,11 +19,18 @@ except Exception:
     pass
 
 SETTINGS_PATH = STATE_DIR / "settings.json"
+# Logo/avatar tùy chỉnh (đổi qua UI) lưu ở đây — ghi được + giữ qua update (Docker volume),
+# vì code tree dashboard/ là read-only trong container.
+BRANDING_DIR = STATE_DIR / "branding"
 
 _DEFAULT = {
     "workspace_name": "Jarvis OS",
     "setup_done": False,                       # đã qua bộ cài đặt lần đầu chưa
     "auth": {"username": "", "password_hash": "", "salt": ""},
+    # Logo/avatar hiển thị (góc trên, thanh bên, màn đăng nhập). logo_ext rỗng = dùng ảnh mặc định.
+    "branding": {"logo_ext": "", "logo_v": 0},
+    # Tên miền riêng cho HTTPS tự động (Caddy On-Demand TLS hỏi /tls-check trước khi xin cert).
+    "domain": {"custom": ""},
     "model": {
         # --- Mô hình MAIN MODEL theo provider (mới) ---
         # Rỗng = suy ra từ legacy engine (config cũ không vỡ); UI set vào đây khi user đổi model.

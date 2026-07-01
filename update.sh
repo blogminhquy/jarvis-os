@@ -20,8 +20,14 @@ is_docker() {
 
 if [ "$MODE" = "docker" ] || { [ "$MODE" = "auto" ] && is_docker; }; then
   echo "==> Docker → pull image mới từ GHCR + restart..."
-  docker compose pull
-  docker compose up -d
+  # Đang bật HTTPS (Caddy)? Giữ nguyên override để cập nhật KHÔNG gỡ mất Caddy.
+  HTTPS_ARGS=""
+  if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx jarvis-caddy; then
+    HTTPS_ARGS="-f docker-compose.yml -f docker-compose.https.yml"
+    echo "==> Phát hiện Caddy (HTTPS) → giữ nguyên cấu hình HTTPS khi cập nhật."
+  fi
+  docker compose $HTTPS_ARGS pull
+  docker compose $HTTPS_ARGS up -d
   echo "==> Xong. Theo dõi:  docker compose logs -f"
 else
   echo "==> Native → cập nhật thư viện Python + restart dịch vụ..."

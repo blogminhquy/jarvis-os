@@ -1,21 +1,39 @@
 # ============================================================================
-# Auto-HTTPS bằng Caddy + Let's Encrypt — cho VPS có TÊN MIỀN riêng.
-# (KHÔNG dùng cho Hostinger Docker Manager: cổng 80/443 đã bị proxy Hostinger chiếm
-#  → trên Hostinger hãy dùng HTTPS sẵn của họ, xem DEPLOY.md.)
+# Auto-HTTPS bằng Caddy + Let's Encrypt (ON-DEMAND TLS) — cho VPS Docker mở cổng 80/443.
 #
-#   1) Trỏ DNS tên miền về IP VPS:  bản ghi A:  jarvis.tencuaban.com → <ip-vps>
-#   2) Chạy (đặt DOMAIN của bạn):
-#        DOMAIN=jarvis.tencuaban.com docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
-#   → Caddy TỰ xin chứng chỉ + gia hạn. Mở https://jarvis.tencuaban.com (HTTPS thật, cookie an toàn).
+# KHÁC bản cũ: KHÔNG cần đặt DOMAIN lúc chạy. Bạn nhập tên miền NGAY TRONG APP
+#   (⚙ Cài đặt → Tên miền riêng). Caddy hỏi backend /tls-check rồi tự xin chứng chỉ cho
+#   ĐÚNG tên miền đó ở request đầu tiên → không kẻ nào trỏ DNS bừa vào IP ép ta xin cert được.
 #
-# Lưu ý: cổng 7777 (HTTP) vẫn mở nhưng đã chặn bằng đăng nhập. Muốn đóng hẳn, chặn firewall:
-#        sudo ufw deny 7777
+#   1) Chạy:  docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+#   2) Mở http://<ip-vps>:7777 → ⚙ Cài đặt → Tên miền riêng → nhập tên miền → Lưu.
+#   3) Trỏ DNS (bản ghi A: ten-mien → <ip-vps>) theo hướng dẫn hiện trong app.
+#   4) Mở https://ten-mien-cua-ban → chứng chỉ tự cấp + tự gia hạn. Xong.
+#
+# (KHÔNG dùng cho Hostinger Docker Manager: cổng 80/443 đã bị proxy Hostinger chiếm →
+#  dùng SSL sẵn của Hostinger, xem DEPLOY.md.)
+# Cần Docker Compose v2.23.1+ (hỗ trợ configs.content). Kiểm tra: docker compose version
 # ============================================================================
-services:
-  jarvis:
-    environment:
-      JARVIS_SECURE_COOKIE: "1"   # truy cập qua Caddy = HTTPS đầu-cuối → bật cookie Secure
+configs:
+  jarvis_caddyfile:
+    content: |
+      {
+        on_demand_tls {
+          ask http://jarvis:7777/tls-check
+        }
+      }
+      https:// {
+        tls {
+          on_demand
+        }
+        reverse_proxy jarvis:7777
+      }
+      http:// {
+        redir https://{host}{uri}
+      }
 
+services:
+  # Backend giữ nguyên; cookie Secure tự bật khi Host khớp tên miền (server tự xử, không cần env).
   caddy:
     image: caddy:2-alpine
     container_name: jarvis-caddy
@@ -25,9 +43,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    command: caddy reverse-proxy --from ${DOMAIN:?Đặt DOMAIN=ten-mien-cua-ban} --to jarvis:7777
+    configs:
+      - source: jarvis_caddyfile
+        target: /etc/caddy/Caddyfile
     volumes:
-      - caddy-data:/data
+      - caddy-data:/data       # chứng chỉ đã cấp — giữ qua restart, không xin lại
       - caddy-config:/config
 
 volumes:

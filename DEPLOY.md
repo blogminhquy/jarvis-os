@@ -76,11 +76,20 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`jarvis-data`, `cla
 Nếu chỉ có HTTP, vào phần **Domains / SSL** của Hostinger để gán tên miền (có SSL) cho app.
 (Caddy bên dưới KHÔNG chạy được trên Hostinger vì cổng 80/443 đã bị proxy của họ chiếm.)
 
-**VPS có tên miền riêng — auto Let's Encrypt (khuyên dùng):**
-1. Trỏ DNS tên miền về IP VPS (bản ghi A: `jarvis.tencuaban.com → <ip>`).
-2. `DOMAIN=jarvis.tencuaban.com docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`
+**VPS có tên miền riêng — auto Let's Encrypt, đặt NGAY TRONG APP (khuyên dùng):**
 
-→ Caddy **tự xin + gia hạn** chứng chỉ. Mở `https://jarvis.tencuaban.com` (tự bật cookie Secure).
+Không cần đặt `DOMAIN` lúc chạy nữa — bật Caddy một lần rồi khai báo tên miền trong giao diện.
+1. Bật Caddy (On-Demand TLS): `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`
+   *(cần Docker Compose v2.23.1+ — kiểm tra `docker compose version`)*
+2. Mở `http://<ip-vps>:7777` → **⚙ Cài đặt → Tên miền riêng** → nhập `jarvis.tencuaban.com` → **Lưu**.
+3. Bấm **Kiểm tra kết nối** → app hiện đúng bản ghi DNS cần tạo (A: `jarvis.tencuaban.com → <ip-vps>`).
+   Trỏ DNS xong, đợi lan.
+4. Mở `https://jarvis.tencuaban.com` → Caddy **tự xin + gia hạn** chứng chỉ ở lần mở đầu, cookie
+   Secure tự bật. Xong.
+
+> An toàn: Caddy hỏi backend (`/tls-check`) trước khi xin cert → **chỉ** cấp cho đúng tên miền bạn đã
+> nhập trong app. Kẻ trỏ DNS bừa vào IP không ép server xin cert lung tung được (khỏi cạn rate-limit
+> Let's Encrypt). Đổi/xoá tên miền: sửa lại trong ⚙ Cài đặt, **không** phải chạy lại lệnh compose.
 
 **Không có tên miền:** dùng Cloudflare Tunnel ngay dưới đây (cũng cho URL HTTPS).
 
