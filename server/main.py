@@ -1177,7 +1177,11 @@ def _unique_path(folder: str, name: str) -> str:
     return candidate
 
 IMG_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp")
-STAGING = PROJECT_ROOT / ".staging"
+# Thư mục stage tạm cho file upload. PHẢI nằm trong STATE_DIR (ghi được ở mọi môi trường):
+# Docker/VPS = /data/state (volume ghi được), local = server/. KHÔNG dùng PROJECT_ROOT/.staging
+# vì trong container code tree /app là read-only + chạy user non-root → makedirs ném
+# PermissionError → HTTP 500 khi upload. (config.py cùng nguyên tắc cho settings/branding.)
+STAGING = cfgmod.STATE_DIR / ".staging"
 
 def _default_brain_dir() -> Path:
     """Brain mặc định = <BRAINS_DIR>/Brain Default. BRAINS_DIR = thư mục CHA chứa mọi brain
@@ -1239,26 +1243,33 @@ async def _save_upload_stream(upload: UploadFile, dest: str, chunk: int = 1024 *
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...), brain: str = Form("")):
-    """Nhận file → stage tạm (chưa vào Sources). Bước /ingest-upload sẽ chuyển thành .md."""
-    os.makedirs(STAGING, exist_ok=True)
-    raw = file.filename or ""
-    if not raw or raw in ("blob", "image.png"):
-        ext = os.path.splitext(raw)[1] or ".png"
-        raw = f"paste-{int(time.time())}{ext}"
-    name = _sanitize_filename(raw)
-    staged = _unique_path(str(STAGING), name)
+    """Nhận file → stage tạm (chưa vào Sources). Bước /ingest-upload sẽ chuyển thành .md.
+
+    Bọc TOÀN BỘ trong try/except: mọi lỗi (không tạo được thư mục staging, đĩa đầy,
+    brain không ghi được...) trả JSON {ok:false, error} + in traceback ra log, KHÔNG để
+    rơi thành HTTP 500 khó chẩn đoán. Frontend hiển thị "lỗi: <lý do>" thay vì "lỗi máy chủ (500)".
+    """
     try:
+        os.makedirs(STAGING, exist_ok=True)
+        raw = file.filename or ""
+        if not raw or raw in ("blob", "image.png"):
+            ext = os.path.splitext(raw)[1] or ".png"
+            raw = f"paste-{int(time.time())}{ext}"
+        name = _sanitize_filename(raw)
+        staged = _unique_path(str(STAGING), name)
         await _save_upload_stream(file, staged)
+        ext = os.path.splitext(staged)[1].lower()
+        kind = "image" if ext in IMG_EXTS else "file"
+        root = _brain_root(brain)
+        sources = _resolve_subfolder(root, r"^(\d+\s*[-_.]\s*)?sources$", "Sources")
+        attachments = _resolve_subfolder(root, r"^(\d+\s*[-_.]\s*)?attachments$", "Attachments")
+        return {"ok": True, "staged": staged, "name": os.path.basename(staged),
+                "kind": kind, "size": os.path.getsize(staged),
+                "sources": sources, "attachments": attachments}
     except Exception as e:
-        return {"ok": False, "error": str(e)}
-    ext = os.path.splitext(staged)[1].lower()
-    kind = "image" if ext in IMG_EXTS else "file"
-    root = _brain_root(brain)
-    sources = _resolve_subfolder(root, r"^(\d+\s*[-_.]\s*)?sources$", "Sources")
-    attachments = _resolve_subfolder(root, r"^(\d+\s*[-_.]\s*)?attachments$", "Attachments")
-    return {"ok": True, "staged": staged, "name": os.path.basename(staged),
-            "kind": kind, "size": os.path.getsize(staged),
-            "sources": sources, "attachments": attachments}
+        import sys, traceback
+        traceback.print_exc(file=sys.stderr)
+        return {"ok": False, "error": f"Không lưu được file tạm: {e}"}
 
 @app.post("/ingest-upload")
 async def ingest_upload(
