@@ -89,6 +89,17 @@ Sau khi lưu (hoặc khi bấm **Kiểm tra kết nối**), Jarvis hiện hướ
 - Khi đổi hoặc xóa tên miền, bạn chỉ cần sửa lại trong ô **TÊN MIỀN RIÊNG (HTTPS)** rồi bấm **Lưu**. Không phải chạy lại lệnh Docker.
 - Việc bật Caddy (chạy lệnh `docker compose ... up -d` với file cấu hình HTTPS) và mở cổng 80/443 là bước deploy hạ tầng, nằm ngoài giao diện này. Xem hướng dẫn deploy chi tiết trong `DEPLOY.md` của dự án.
 
+## Nếu bạn deploy trên Hostinger (khác cách trên)
+
+Hostinger VPS đã cài sẵn reverse proxy Traefik lo SSL, và cổng 80/443 đã bị Traefik chiếm, nên **Caddy và luồng bật SSL trong app KHÔNG dùng trên Hostinger**. Thay vào đó:
+
+1. Trỏ DNS: bản ghi `A  <tên miền của bạn> → <IP VPS Hostinger>`.
+2. Deploy bằng file compose có nhãn Traefik của Hostinger: `docker-compose.hostinger.yml` (Docker Manager → Compose → URL).
+3. Đặt biến môi trường `DOMAIN_NAME=<tên miền của bạn>` trong Docker Manager.
+4. Mở `https://<tên miền>`; Traefik tự xin chứng chỉ ở lần đầu. Không còn phải vào bằng `:7777`.
+
+Chi tiết và xử lý sự cố xem mục "Tên miền + HTTPS trên Hostinger" trong `DEPLOY.md`.
+
 ## Mẹo
 
 - Ảnh logo nên là ảnh vuông (tỉ lệ 1:1) để không bị cắt méo, vì Jarvis hiển thị logo trong khung vuông bo góc.

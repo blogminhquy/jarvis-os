@@ -15,8 +15,11 @@ VPS Hostinger → **Docker Manager → Compose → URL** → dán link rồi **D
 ```
 https://raw.githubusercontent.com/blogminhquy/jarvis-os/main/docker-compose.yml
 ```
-Hostinger tự pull image + cấp URL `https://<app>.<vps>.hstgr.cloud`. Bấm **Open app** → ra
+Hostinger pull image + chạy. Mở app bằng `http://<ip-vps>:7777` (IP xem ở hPanel → VPS) → ra
 màn **tạo tài khoản admin**.
+
+> 🌐 **Muốn tên miền riêng + HTTPS (bỏ `:7777`, để mic/voice chạy)?** Dùng bản có nhãn Traefik
+> `docker-compose.hostinger.yml` thay cho link trên - xem mục [Tên miền + HTTPS trên Hostinger](#-tên-miền--https-trên-hostinger-bỏ-7777). Compose gốc này chỉ vào được bằng IP:7777.
 
 **3 việc làm 1 lần:**
 1. **Để image GHCR ở chế độ Public:** GitHub → repo `jarvis-os` → **Packages** → `jarvis-os`
@@ -72,9 +75,24 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`jarvis-data`, `cla
 > → mở URL `https://...trycloudflare.com` → mic + voice chạy. (URL đổi mỗi restart; muốn cố định →
 > *named tunnel* + `TUNNEL_TOKEN`, xem mục Cloudflare Tunnel bên dưới.)
 
-**Hostinger Docker Manager:** Hostinger cấp HTTPS sẵn - mở app bằng `https://...` (URL của bạn).
-Nếu chỉ có HTTP, vào phần **Domains / SSL** của Hostinger để gán tên miền (có SSL) cho app.
-(Caddy bên dưới KHÔNG chạy được trên Hostinger vì cổng 80/443 đã bị proxy của họ chiếm.)
+#### 🌐 Tên miền + HTTPS trên Hostinger (bỏ `:7777`)
+
+Hostinger VPS cài sẵn reverse proxy **Traefik** (mạng `traefik-proxy`) tự cấp SSL Let's Encrypt. Nhưng
+Traefik chỉ định tuyến container **có gắn nhãn Traefik** - compose gốc `docker-compose.yml` KHÔNG gắn
+nhãn nên chỉ vào được bằng `http://<ip>:7777`. Để chạy trên tên miền riêng có HTTPS:
+
+1. **Trỏ DNS:** tạo bản ghi `A  <tên miền của bạn> → <IP VPS>` (IP xem ở hPanel → VPS).
+2. **Deploy bằng compose có nhãn Traefik** - Docker Manager → Compose → URL:
+   ```
+   https://raw.githubusercontent.com/blogminhquy/jarvis-os/main/docker-compose.hostinger.yml
+   ```
+3. **Đặt biến** `DOMAIN_NAME=<tên miền của bạn>` ở ô Environment của Docker Manager (BẮT BUỘC, không có
+   thì Traefik không định tuyến → vẫn 404).
+4. **Deploy** → mở `https://<tên miền>` → Traefik tự xin chứng chỉ lần đầu (~30 giây). Xong, hết `:7777`.
+
+> Nhãn dùng mặc định Hostinger: mạng `traefik-proxy`, entrypoint `websecure`, certresolver `letsencrypt`,
+> cổng nội bộ `7777`. Cert không cấp? Kiểm tra 3 tên này khớp Traefik của bạn + DNS đã trỏ đúng IP VPS.
+> **Caddy (`docker-compose.https.yml`) KHÔNG dùng trên Hostinger** vì cổng 80/443 đã bị Traefik của họ chiếm.
 
 **VPS có tên miền riêng - auto Let's Encrypt, đặt NGAY TRONG APP (khuyên dùng):**
 

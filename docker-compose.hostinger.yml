@@ -1,0 +1,90 @@
+# ============================================================================
+# Jarvis OS - HOSTINGER VPS (Docker Manager) - HTTPS qua Traefik CÓ SẴN của Hostinger.
+#
+# Hostinger VPS cài sẵn reverse proxy Traefik (mạng "traefik-proxy") tự cấp SSL Let's Encrypt
+# và định tuyến theo TÊN MIỀN. File này gắn nhãn Traefik cho Jarvis để chạy trên tên miền riêng
+# với HTTPS, KHÔNG cần mở cổng 7777, KHÔNG cần Caddy. Đây là cách để bỏ ":7777" mà vẫn có SSL.
+#
+# CÁCH DÙNG (làm đúng thứ tự):
+#   1) Trỏ DNS: tạo bản ghi  A  <tên miền của bạn>  ->  <IP VPS Hostinger>.
+#      (IP xem ở hPanel > VPS. Ví dụ:  A  javis.minhquy.vn  ->  72.62.73.98)
+#   2) Hostinger hPanel > VPS > Docker Manager > Compose > dán URL này:
+#      https://raw.githubusercontent.com/blogminhquy/jarvis-os/main/docker-compose.hostinger.yml
+#   3) Ở ô Environment (biến môi trường) của Docker Manager, đặt:
+#         DOMAIN_NAME=<tên miền của bạn>       (ví dụ DOMAIN_NAME=javis.minhquy.vn)
+#      (Không đặt biến này thì Traefik không biết định tuyến -> vẫn 404.)
+#   4) Deploy. Mở  https://<tên miền>  ->  Traefik tự xin chứng chỉ ở lần đầu (~30 giây). Xong.
+#      Không còn phải vào bằng IP:7777 nữa.
+#
+# GHI CHÚ:
+#   - VPS KHÔNG phải Hostinger (DigitalOcean, Vultr...): KHÔNG dùng file này. Dùng
+#     docker-compose.yml + docker-compose.https.yml (Caddy) - xem DEPLOY.md.
+#   - Tên certresolver ("letsencrypt"), entrypoint ("websecure"), mạng ("traefik-proxy") lấy theo
+#     mặc định Traefik của Hostinger. Nếu cert không cấp: kiểm tra 3 tên này trong Traefik của bạn.
+#   - Image GHCR phải để PUBLIC (GitHub > Packages > jarvis-os > Package settings > Public).
+# ============================================================================
+services:
+  jarvis:
+    image: ghcr.io/blogminhquy/jarvis-os:latest
+    container_name: jarvis
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      JARVIS_HOST: 0.0.0.0
+      JARVIS_PORT: "7777"
+      JARVIS_REQUIRE_LOGIN: "1"     # ÉP đăng nhập/đăng ký khi mở app (public)
+      JARVIS_STATE_DIR: /data/state
+      BRAIN_PATH: /data/brain
+      BRAINS_DIR: /brains
+      OBSIDIAN_VAULT_PATH: /data/vault
+      CLAUDE_CWD: /app
+      WATCHTOWER_TOKEN: ${WATCHTOWER_TOKEN:-jarvis-update}
+    # KHÔNG publish 7777 ra host: Traefik vào thẳng cổng 7777 qua mạng nội bộ traefik-proxy
+    # (chỉ HTTPS 443 lộ ra Internet). An toàn hơn + để Hostinger cấp URL tên miền có SSL.
+    expose:
+      - "7777"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-proxy
+      - traefik.http.routers.jarvis.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.jarvis.entrypoints=websecure
+      - traefik.http.routers.jarvis.tls.certresolver=letsencrypt
+      - traefik.http.services.jarvis.loadbalancer.server.port=7777
+    volumes:
+      - jarvis-data:/data
+      - jarvis-brains:/brains
+      - claude-auth:/home/jarvis/.claude
+      - codex-auth:/home/jarvis/.codex
+    networks:
+      - traefik-proxy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+  # Cập nhật 1-click từ nút "Cập nhật ngay" trong app (chỉ Watchtower có quyền Docker socket).
+  watchtower:
+    image: containrrr/watchtower
+    container_name: jarvis-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_HTTP_API_UPDATE: "true"
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_TOKEN:-jarvis-update}
+      WATCHTOWER_CLEANUP: "true"
+    command: jarvis
+
+# Mạng Traefik CÓ SẴN của Hostinger (do project Traefik tạo). Container Jarvis join vào đây để
+# Traefik thấy và định tuyến HTTPS. "external: true" = dùng mạng đã tồn tại, không tự tạo.
+networks:
+  traefik-proxy:
+    external: true
+
+volumes:
+  jarvis-data:
+  jarvis-brains:
+  claude-auth:
+  codex-auth:
