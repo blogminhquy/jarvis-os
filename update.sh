@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Jarvis OS — cập nhật lên bản mới nhất từ GitHub.
+# Jarvis OS - cập nhật lên bản mới nhất từ GitHub.
 #   ./update.sh            (tự nhận Docker hay native)
 #   ./update.sh docker     (ép chế độ Docker)
 #   ./update.sh native     (ép chế độ native/systemd)

@@ -1,5 +1,5 @@
 # ============================================================================
-# Auto-HTTPS bằng Caddy + Let's Encrypt (ON-DEMAND TLS) — cho VPS Docker mở cổng 80/443.
+# Auto-HTTPS bằng Caddy + Let's Encrypt (ON-DEMAND TLS) - cho VPS Docker mở cổng 80/443.
 #
 # KHÁC bản cũ: KHÔNG cần đặt DOMAIN lúc chạy. Bạn nhập tên miền NGAY TRONG APP
 #   (⚙ Cài đặt → Tên miền riêng). Caddy hỏi backend /tls-check rồi tự xin chứng chỉ cho
@@ -47,7 +47,7 @@ services:
       - source: jarvis_caddyfile
         target: /etc/caddy/Caddyfile
     volumes:
-      - caddy-data:/data       # chứng chỉ đã cấp — giữ qua restart, không xin lại
+      - caddy-data:/data       # chứng chỉ đã cấp - giữ qua restart, không xin lại
       - caddy-config:/config
 
 volumes:

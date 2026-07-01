@@ -1,5 +1,5 @@
 # ============================================================================
-# Jarvis OS — docker compose (PRODUCTION: pull image dựng sẵn từ GHCR)
+# Jarvis OS - docker compose (PRODUCTION: pull image dựng sẵn từ GHCR)
 #
 # CÀI 1-CLICK TRÊN HOSTINGER:
 #   VPS → Docker Manager → Compose → URL → dán:
@@ -36,13 +36,13 @@ services:
       - "7777:7777"                 # Hostinger proxy / VPS map vào cổng này → cấp URL công khai
     volumes:
       - jarvis-data:/data                       # state: settings/mật khẩu/sessions/loop (có secret → KHÔNG git)
-      - jarvis-brains:/brains                   # MỌI second brain (kiến thức của bạn) — bền qua mọi update
+      - jarvis-brains:/brains                   # MỌI second brain (kiến thức của bạn) - bền qua mọi update
       # ↑ Muốn BACKUP brain lên GitHub: đổi dòng trên thành bind-mount thư mục thật trên VPS, vd:
       #     - ./brains:/brains
       #   rồi 1 lần cấp quyền cho user non-root của container:  sudo chown -R 10001:10001 ./brains
       #   Sau đó: cd brains && git init && git add -A && git commit -m backup && git push
       - claude-auth:/home/jarvis/.claude        # token đăng nhập Claude (giữ qua mọi update!)
-      - codex-auth:/home/jarvis/.codex          # token đăng nhập ChatGPT/Codex (codex login — giữ qua update)
+      - codex-auth:/home/jarvis/.codex          # token đăng nhập ChatGPT/Codex (codex login - giữ qua update)
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JARVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
       interval: 30s

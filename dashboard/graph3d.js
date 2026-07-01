@@ -1,5 +1,5 @@
 // ============================================
-// JARVIS OS — 3D Graph (V.A.U.L.T. nebula HUD)
+// JARVIS OS - 3D Graph (V.A.U.L.T. nebula HUD)
 // Node = sprite phát sáng additive (glow) → khối cầu tinh vân như chase.h.ai.
 // Dùng window.THREE global (load trước 3d-force-graph) + ForceGraph3D UMD.
 // ============================================
@@ -31,7 +31,7 @@ function particleGlowTexture(THREE) {
   cv.width = cv.height = s;
   const ctx = cv.getContext("2d");
   const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  g.addColorStop(0,    "rgba(255,255,255,1)");    // lõi trắng nóng — rất nhỏ
+  g.addColorStop(0,    "rgba(255,255,255,1)");    // lõi trắng nóng - rất nhỏ
   g.addColorStop(0.06, "rgba(255,210,120,0.95)"); // cam sáng ấm
   g.addColorStop(0.18, "rgba(255,140,40,0.75)");  // cam đậm
   g.addColorStop(0.40, "rgba(255,90,10,0.30)");   // cam mờ
@@ -64,7 +64,7 @@ class JarvisGraph3D {
     this._firingNodes = new Map();
     this._births = new Map();   // sprite -> frames còn lại của hiệu ứng "nảy sinh"
     this._paused = false;
-    // Expose để Console (console.js) gọi pause()/wake() khi chuyển trang — không cần sửa app.js.
+    // Expose để Console (console.js) gọi pause()/wake() khi chuyển trang - không cần sửa app.js.
     window.__jarvisGraph = this;
     window.dispatchEvent(new Event("jarvis-graph-created"));
   }
@@ -128,7 +128,7 @@ class JarvisGraph3D {
 
       const controls = this.graph.controls();
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.6;   // quay nhẹ liên tục — luôn "sống"
+      controls.autoRotateSpeed = 0.6;   // quay nhẹ liên tục - luôn "sống"
 
       this._animate();
     }
@@ -275,7 +275,7 @@ class JarvisGraph3D {
       if (this._paused) { this._raf = null; return; }   // pause: dừng hẳn vòng lặp (kể cả khi load() vừa gọi lại)
       this._raf = requestAnimationFrame(tick);
       if (!this.graph) return;
-      // Không render khi tab ẩn — tiết kiệm CPU/GPU hoàn toàn
+      // Không render khi tab ẩn - tiết kiệm CPU/GPU hoàn toàn
       if (document.hidden) return;
       // Sau khi physics settle: giảm còn ~15fps (bỏ qua 3/4 frame)
       if (this._settled) {
@@ -312,7 +312,7 @@ class JarvisGraph3D {
         }
       }
 
-      // Quay tròn nhẹ liên tục — tự xoay scene
+      // Quay tròn nhẹ liên tục - tự xoay scene
       const scene = this.graph.scene && this.graph.scene();
       if (scene) scene.rotation.y += 0.0018 + lvl * 0.012;
 
@@ -330,7 +330,7 @@ class JarvisGraph3D {
             src.y + (tgt.y - src.y) * p.t,
             src.z + (tgt.z - src.z) * p.t,
           );
-          // Fade in từ nguồn, fade out gần đích — trông như bong bóng sáng trôi
+          // Fade in từ nguồn, fade out gần đích - trông như bong bóng sáng trôi
           p.sp.material.opacity = Math.sin(p.t * Math.PI) * 0.85 + 0.1;
         }
       }
@@ -338,7 +338,7 @@ class JarvisGraph3D {
       // --- THINKING: nơron kích hoạt + LAN TRUYỀN theo synapse ---
       if (this._thinking) {
         const n = this._sprites.length;
-        // Điểm khởi phát: 1-2 node "loé" lên thưa thớt (ý nghĩ mới) — chậm cho đỡ rối
+        // Điểm khởi phát: 1-2 node "loé" lên thưa thớt (ý nghĩ mới) - chậm cho đỡ rối
         if (n > 0 && this._frame % 22 === 0) {
           const seeds = Math.max(1, Math.floor(n * 0.012));
           for (let i = 0; i < seeds; i++) {
@@ -358,7 +358,7 @@ class JarvisGraph3D {
           }
           for (const j of toAdd) this._firingNodes.set(j, 12);
         }
-        // Animate firing nodes — sáng lên rồi tắt dần
+        // Animate firing nodes - sáng lên rồi tắt dần
         for (const [idx, frames] of this._firingNodes) {
           const sp = this._sprites[idx];
           if (sp) {
@@ -386,7 +386,7 @@ class JarvisGraph3D {
   stop() { if (this._raf) cancelAnimationFrame(this._raf); this._raf = null; }
   resume() { if (!this._raf) this._animate(); }
 
-  // Pause SÂU — dùng khi rời cockpit (mở Console): dừng vòng render + engine vật lý +
+  // Pause SÂU - dùng khi rời cockpit (mở Console): dừng vòng render + engine vật lý +
   // autorotate → CPU/GPU về ~0, nhưng giữ context để bật lại tức thì. Đảo bằng wake().
   pause() {
     if (this._paused) return;

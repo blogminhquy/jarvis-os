@@ -1,5 +1,5 @@
 """
-Đăng nhập ChatGPT (OpenAI) bằng OAuth **device-code** — dùng gói ChatGPT Plus/Pro
+Đăng nhập ChatGPT (OpenAI) bằng OAuth **device-code** - dùng gói ChatGPT Plus/Pro
 thay cho API key. Spec pin từ source chính thức openai/codex (device_code_auth.rs,
 token_data.rs, server.rs) + plugin tumf/opencode-openai-device-auth.
 
@@ -12,7 +12,7 @@ Luồng:
        + redirect_uri=https://auth.openai.com/deviceauth/callback -> access/refresh/id_token
   account_id = claim id_token["https://api.openai.com/auth"]["chatgpt_account_id"]
 
-⚠️ Không chính thức cho app ngoài Codex — token chạy backend Codex (model gpt-5-codex),
+⚠️ Không chính thức cho app ngoài Codex - token chạy backend Codex (model gpt-5-codex),
 có thể vỡ khi OpenAI đổi. Token lưu trong settings.json (gitignored).
 """
 import time
@@ -124,7 +124,7 @@ def poll():
 
 
 def valid_creds():
-    """(access_token, account_id) hợp lệ — tự refresh nếu hết hạn. None nếu chưa kết nối."""
+    """(access_token, account_id) hợp lệ - tự refresh nếu hết hạn. None nếu chưa kết nối."""
     o = cfgmod.read_settings()["model"].get("openai_oauth") or {}
     if not o.get("access_token") and not o.get("refresh_token"):
         return None

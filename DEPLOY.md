@@ -1,15 +1,15 @@
 # Cài đặt Jarvis OS trên server / VPS
 
 Jarvis OS là một AI agent cá nhân + Second Brain. "Bộ não" của nó là **Claude Code CLI**
-(đăng nhập một lần, không cần API key). Có 3 cách chạy — chọn 1.
+(đăng nhập một lần, không cần API key). Có 3 cách chạy - chọn 1.
 
 > ⚠️ **An toàn:** Jarvis chạy Claude với toàn quyền trên máy. Khi chạy public (Docker/VPS/Hostinger),
-> Jarvis **tự bật bắt buộc đăng nhập** — mở app ra là màn **tạo tài khoản admin / đăng nhập**, không
+> Jarvis **tự bật bắt buộc đăng nhập** - mở app ra là màn **tạo tài khoản admin / đăng nhập**, không
 > ai điều khiển được khi chưa đặt mật khẩu. (Chạy nội bộ muốn tắt: `JARVIS_REQUIRE_LOGIN=0`.)
 
 ---
 
-## Cách 1 — Hostinger Docker Manager (1-click, nhanh nhất) ⚡
+## Cách 1 - Hostinger Docker Manager (1-click, nhanh nhất) ⚡
 
 VPS Hostinger → **Docker Manager → Compose → URL** → dán link rồi **Deploy**:
 ```
@@ -33,7 +33,7 @@ màn **tạo tài khoản admin**.
 
 ---
 
-## Cách 2 — Docker trên VPS bất kỳ (pull image, không cần clone source)
+## Cách 2 - Docker trên VPS bất kỳ (pull image, không cần clone source)
 
 Cần Docker. Chưa có? `curl -fsSL https://get.docker.com | sh`
 ```bash
@@ -61,10 +61,10 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`jarvis-data`, `cla
 ### 🔒 HTTPS tự động
 
 > ⚠️ **Voice/mic BẮT BUỘC HTTPS.** Trình duyệt chỉ cho cấp quyền micro/camera trên `https://` (hoặc
-> localhost) — mở bằng `http://<ip>:7777` thì mic luôn bị chặn, KHÔNG bật tay được. **Không có chứng
+> localhost) - mở bằng `http://<ip>:7777` thì mic luôn bị chặn, KHÔNG bật tay được. **Không có chứng
 > chỉ HTTPS nào cấp cho IP trần** → muốn mic chạy phải dùng 1 trong các cách dưới (tên miền hoặc tunnel).
 >
-> **Nhanh nhất (không cần tên miền) — Cloudflare Tunnel:**
+> **Nhanh nhất (không cần tên miền) - Cloudflare Tunnel:**
 > ```bash
 > docker compose --profile tunnel up -d
 > docker compose logs tunnel | grep trycloudflare
@@ -72,15 +72,15 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`jarvis-data`, `cla
 > → mở URL `https://...trycloudflare.com` → mic + voice chạy. (URL đổi mỗi restart; muốn cố định →
 > *named tunnel* + `TUNNEL_TOKEN`, xem mục Cloudflare Tunnel bên dưới.)
 
-**Hostinger Docker Manager:** Hostinger cấp HTTPS sẵn — mở app bằng `https://...` (URL của bạn).
+**Hostinger Docker Manager:** Hostinger cấp HTTPS sẵn - mở app bằng `https://...` (URL của bạn).
 Nếu chỉ có HTTP, vào phần **Domains / SSL** của Hostinger để gán tên miền (có SSL) cho app.
 (Caddy bên dưới KHÔNG chạy được trên Hostinger vì cổng 80/443 đã bị proxy của họ chiếm.)
 
-**VPS có tên miền riêng — auto Let's Encrypt, đặt NGAY TRONG APP (khuyên dùng):**
+**VPS có tên miền riêng - auto Let's Encrypt, đặt NGAY TRONG APP (khuyên dùng):**
 
-Không cần đặt `DOMAIN` lúc chạy nữa — bật Caddy một lần rồi khai báo tên miền trong giao diện.
+Không cần đặt `DOMAIN` lúc chạy nữa - bật Caddy một lần rồi khai báo tên miền trong giao diện.
 1. Bật Caddy (On-Demand TLS): `docker compose -f docker-compose.yml -f docker-compose.https.yml up -d`
-   *(cần Docker Compose v2.23.1+ — kiểm tra `docker compose version`)*
+   *(cần Docker Compose v2.23.1+ - kiểm tra `docker compose version`)*
 2. Mở `http://<ip-vps>:7777` → **⚙ Cài đặt → Tên miền riêng** → nhập `jarvis.tencuaban.com` → **Lưu**.
 3. Bấm **Kiểm tra kết nối** → app hiện đúng bản ghi DNS cần tạo (A: `jarvis.tencuaban.com → <ip-vps>`).
    Trỏ DNS xong, đợi lan.
@@ -95,9 +95,9 @@ Không cần đặt `DOMAIN` lúc chạy nữa — bật Caddy một lần rồi
 
 ---
 
-### 🌐 Truy cập từ xa (Hostinger / VPS bất kỳ) — Cloudflare Tunnel
+### 🌐 Truy cập từ xa (Hostinger / VPS bất kỳ) - Cloudflare Tunnel
 
-Mở giao diện Javis từ máy khác mà KHÔNG cần mở port / không cần tên miền — như Hermes:
+Mở giao diện Javis từ máy khác mà KHÔNG cần mở port / không cần tên miền - như Hermes:
 
 1. **Đặt mật khẩu TRƯỚC (bắt buộc):** mở Javis (qua SSH tunnel ở bước 5) → Dashboard → **Tài khoản** → đặt mật khẩu admin. Javis chạy Claude toàn quyền trên máy → TUYỆT ĐỐI không phơi ra Internet khi chưa có mật khẩu. (Server cũng in cảnh báo nếu chạy public mà chưa đặt.)
 2. Bật tunnel: `docker compose --profile tunnel up -d`
@@ -107,7 +107,7 @@ Mở giao diện Javis từ máy khác mà KHÔNG cần mở port / không cần
 
 ---
 
-## Cách 2 — Cài trực tiếp lên Linux/macOS (không Docker)
+## Cách 2 - Cài trực tiếp lên Linux/macOS (không Docker)
 
 ```bash
 git clone https://github.com/blogminhquy/jarvis-os.git jarvis && cd jarvis
@@ -123,7 +123,7 @@ Quản lý dịch vụ: `journalctl -u jarvis -f` · `sudo systemctl restart jar
 
 ---
 
-## Cách 3 — Windows (máy cá nhân)
+## Cách 3 - Windows (máy cá nhân)
 
 Double-click `setup.bat` (chạy hiện cửa sổ) hoặc `start-jarvis.vbs` (chạy ngầm).
 Dừng bằng `stop-jarvis.bat`. Mở http://localhost:7777
@@ -145,7 +145,7 @@ Dừng bằng `stop-jarvis.bat`. Mở http://localhost:7777
 
 ## 🔄 Cập nhật khi có code mới
 
-> **Nhanh nhất — bấm ngay trong app:** mở **Tổng quan** (rail trái) → mục **Phiên bản** hiện
+> **Nhanh nhất - bấm ngay trong app:** mở **Tổng quan** (rail trái) → mục **Phiên bản** hiện
 > phiên bản đang chạy + tự kiểm tra bản mới trên GitHub. Có bản mới → bấm **⬆ Cập nhật ngay**,
 > app tự kéo bản mới + khởi động lại (~20-40s), khỏi vào terminal.
 > - **Docker/VPS:** cần service **watchtower** (đã có sẵn trong `docker-compose.yml`). Chỉ Watchtower
@@ -162,7 +162,7 @@ cd jarvis && ./update.sh
 ```
 
 Script tự `git pull` rồi:
-- **Docker**: `docker compose build && docker compose up -d` — dữ liệu trong volume KHÔNG mất.
+- **Docker**: `docker compose build && docker compose up -d` - dữ liệu trong volume KHÔNG mất.
 - **Native (systemd)**: `pip install -r requirements.txt` + `systemctl restart jarvis`.
 
 Ép chế độ: `./update.sh docker` hoặc `./update.sh native`. Làm tay tương đương:
@@ -189,4 +189,4 @@ Provider **OpenAI OAuth (ChatGPT)** chat qua **Codex CLI** (đã cài sẵn tron
 mở **App terminal** chạy `codex login` (mở link, đăng nhập ChatGPT). Token lưu ở `~/.codex`
 (Docker: volume `codex-auth`) → giữ qua mọi update. Kiểm tra: `codex --version`. Sau đó vào
 **Models → Đổi model → ChatGPT** là chat dùng được. (ChatGPT-qua-codex là thử nghiệm; muốn ổn
-định/đa model hơn thì dùng **OpenRouter** — 1 key mọi model — hoặc Claude.)
+định/đa model hơn thì dùng **OpenRouter** - 1 key mọi model - hoặc Claude.)

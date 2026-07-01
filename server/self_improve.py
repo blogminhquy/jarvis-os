@@ -1,11 +1,11 @@
 """
-Vòng tự cải thiện (self-improvement loop) — TÁCH RIÊNG thành 1 feature module.
+Vòng tự cải thiện (self-improvement loop) - TÁCH RIÊNG thành 1 feature module.
 
 Trước đây logic này nằm lẫn trong main.py. Giờ gom về đây thành 1 đơn vị độc lập:
-  - LoopConfig I/O (loop_config.json)         — read_config / write_config
+  - LoopConfig I/O (loop_config.json)         - read_config / write_config
   - run_cycle()  : 1 vòng tìm việc → (đề xuất | tự làm + kiểm chứng) → ghi log
-  - scheduler tick helper                      — should_run(cfg)
-  - APIRouter /loop/*                          — config / run-now / stop / log
+  - scheduler tick helper                      - should_run(cfg)
+  - APIRouter /loop/*                          - config / run-now / stop / log
 
 Thiết kế "register(app, deps)" + LoopDeps: module này KHÔNG import main.py (tránh
 vòng lặp import). Mọi helper sẵn có của main (build_system_prompt, metrics, brain_root,
@@ -13,7 +13,7 @@ aux_model, atomic_write_text...) được TIÊM vào qua LoopDeps. ClaudeCLI/can
 thẳng từ claude_cli.
 
 An toàn: vòng lặp CHỈ thao tác FILE trong vault (allowed_tools = safe/readonly), TUYỆT ĐỐI
-không gọi MCP tiền/đơn — giữ nguyên kỷ luật của bản gốc.
+không gọi MCP tiền/đơn - giữ nguyên kỷ luật của bản gốc.
 """
 from __future__ import annotations
 
@@ -117,7 +117,7 @@ class LoopFeature:
                 cards = mdata.get("cards", []) or []
                 if not cards:
                     self._log_append(brain, {
-                        "title": f"loop (business/{mode}) — {reason}",
+                        "title": f"loop (business/{mode}) - {reason}",
                         "body": "Chưa có số liệu kinh doanh (chưa đấu MCP hoặc chưa có cache) → bỏ qua vòng này. "
                                 "Hãy bấm ⟳ tải số liệu hoặc đấu MCP (POS/kênh/ads)."})
                     cfg["last_run"] = time.time(); cfg["last_summary"] = "Chưa có số liệu KD"; cfg["last_status"] = "no-data"
@@ -126,7 +126,7 @@ class LoopFeature:
                 cards_json = json.dumps(cards, ensure_ascii=False)
                 src = mdata.get("source", "")
                 base = (
-                    "VÒNG TỰ CẢI THIỆN — MỤC TIÊU: CẢI THIỆN CHỈ SỐ KINH DOANH.\n"
+                    "VÒNG TỰ CẢI THIỆN - MỤC TIÊU: CẢI THIỆN CHỈ SỐ KINH DOANH.\n"
                     f"Chỉ số hiện tại (nguồn {src or 'MCP'}): {cards_json}\n"
                     "Đọc thêm context trong vault (Wiki marketing/sales/funnel/content, data cache, projects) để hiểu bối cảnh. "
                     "Xác định CHỈ SỐ YẾU NHẤT hoặc đòn bẩy lớn nhất, rồi đề ra 1 hành động khả thi TUẦN NÀY để cải thiện nó "
@@ -142,7 +142,7 @@ class LoopFeature:
                     )
                 else:
                     prompt = base + (
-                        "CHẾ ĐỘ ĐỀ XUẤT — chỉ phân tích, KHÔNG ghi file. Nêu chỉ số yếu nhất + 2-3 đề xuất hành động cụ thể để cải thiện."
+                        "CHẾ ĐỘ ĐỀ XUẤT - chỉ phân tích, KHÔNG ghi file. Nêu chỉ số yếu nhất + 2-3 đề xuất hành động cụ thể để cải thiện."
                     )
             elif goal == "product":
                 base = (
@@ -158,7 +158,7 @@ class LoopFeature:
                     )
                 else:
                     prompt = base + (
-                        "CHẾ ĐỘ ĐỀ XUẤT — chỉ đọc, không ghi. Liệt kê 3-5 cải tiến giá trị nhất để Jarvis hữu dụng hơn (mỗi cái 1 dòng + lý do)."
+                        "CHẾ ĐỘ ĐỀ XUẤT - chỉ đọc, không ghi. Liệt kê 3-5 cải tiến giá trị nhất để Jarvis hữu dụng hơn (mỗi cái 1 dòng + lý do)."
                     )
             elif goal == "custom":
                 objective = (cfg.get("custom_goal") or "").strip() or "Cải thiện vault theo cách hữu ích nhất bạn thấy."
@@ -167,9 +167,9 @@ class LoopFeature:
                     "⛔ AN TOÀN: CHỈ thao tác FILE trong vault, KHÔNG gọi MCP/tiền/đơn.\n"
                 )
                 prompt = base + ("Thực hiện 1 bước cụ thể cho mục tiêu trên rồi báo cáo ngắn." if mode == "auto"
-                                 else "CHẾ ĐỘ ĐỀ XUẤT — chỉ đọc. Đề xuất 2-3 hành động cụ thể cho mục tiêu trên.")
+                                 else "CHẾ ĐỘ ĐỀ XUẤT - chỉ đọc. Đề xuất 2-3 hành động cụ thể cho mục tiêu trên.")
             else:
-                # goal == brain — làm dày bộ não
+                # goal == brain - làm dày bộ não
                 if mode == "auto":
                     prompt = (
                         "VÒNG TỰ CẢI THIỆN (làm dày bộ não, chế độ TỰ LÀM). Bạn CHỈ được thao tác FILE trong vault. "
@@ -180,7 +180,7 @@ class LoopFeature:
                     )
                 else:
                     prompt = (
-                        "VÒNG TỰ CẢI THIỆN (làm dày bộ não, chế độ ĐỀ XUẤT — chỉ đọc).\n"
+                        "VÒNG TỰ CẢI THIỆN (làm dày bộ não, chế độ ĐỀ XUẤT - chỉ đọc).\n"
                         "Quét vault, liệt kê 3-5 việc giá trị nhất: source unprocessed, _open-questions mở, lỗi Wiki, task quá hạn. "
                         "Mỗi việc 1 dòng '- [loại] mô tả → hành động'. Không có gì → 'Không có việc mới'."
                     )
@@ -227,7 +227,7 @@ class LoopFeature:
                         verify_line = "Kiểm chứng: không parse được"
 
             # Lưu log + cập nhật config
-            title = f"loop ({goal}/{mode}) — {reason}"
+            title = f"loop ({goal}/{mode}) - {reason}"
             body = summary + (f"\n\n**Kiểm chứng:** {verify_line}" if verify_line else "")
             self._log_append(brain, {"title": title, "body": body})
             cfg["last_run"] = time.time()

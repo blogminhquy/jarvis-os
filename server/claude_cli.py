@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import AsyncIterator, Optional
 
 
-# Registry các tiến trình Claude đang chạy — để ngắt giữa chừng.
+# Registry các tiến trình Claude đang chạy - để ngắt giữa chừng.
 # Map proc -> tag ("chat" | "metrics" | "workflow" | "loop" | ...) để ngắt CÓ CHỌN LỌC.
 _ACTIVE_PROCS = {}
 _PROC_LOCK = threading.Lock()
@@ -39,7 +39,7 @@ def cancel_all(tag=None):
 
 
 def _kill_tree(p):
-    """Giết 1 tiến trình claude/codex VÀ TOÀN BỘ cây con (node) — dùng cho watchdog idle-timeout.
+    """Giết 1 tiến trình claude/codex VÀ TOÀN BỘ cây con (node) - dùng cho watchdog idle-timeout.
     Tiến trình treo (kẹt auth / flail trên path không tồn tại) nếu không giết sẽ sống mãi, ngốn
     RAM/CPU và làm treo server một-tiến-trình. POSIX dùng killpg (cần start_new_session=True)."""
     try:
@@ -110,7 +110,7 @@ def auth_logout():
 
 
 def auth_login():
-    """Mở luồng đăng nhập (browser) ở tiến trình nền — tự hoàn tất qua localhost callback rồi thoát.
+    """Mở luồng đăng nhập (browser) ở tiến trình nền - tự hoàn tất qua localhost callback rồi thoát.
     Chạy được trên máy có trình duyệt (local). Frontend poll auth_status tới khi connected."""
     cli = find_claude_cli()
     if not cli:
@@ -202,12 +202,12 @@ def auth_login_ui_code(code):
             return {"ok": False, "error": _LOGIN["error"]}
         if proc.poll() is not None:
             return {"ok": proc.returncode == 0,
-                    "error": "" if proc.returncode == 0 else "Đăng nhập thất bại — thử lại."}
+                    "error": "" if proc.returncode == 0 else "Đăng nhập thất bại - thử lại."}
         time.sleep(0.2)
     return {"ok": _LOGIN["done"], "error": _LOGIN.get("error", "")}
 
 
-# ---- MCP native (cho server OAuth — Claude Code tự lo OAuth; scope user = dùng chung mọi cwd) ----
+# ---- MCP native (cho server OAuth - Claude Code tự lo OAuth; scope user = dùng chung mọi cwd) ----
 def mcp_native_add(name, url, transport="http", header=None, client_id=None):
     cli = find_claude_cli()
     if not cli:
@@ -258,7 +258,7 @@ def mcp_native_status(name):
 
 
 def mcp_native_list():
-    """Liệt kê MCP sẵn trong Claude Code (đồng bộ từ claude.ai) — chỉ để hiển thị.
+    """Liệt kê MCP sẵn trong Claude Code (đồng bộ từ claude.ai) - chỉ để hiển thị.
     Parse output `<tên>: <url> - <trạng thái>` (health check nên hơi lâu)."""
     cli = find_claude_cli()
     if not cli:
@@ -396,7 +396,7 @@ class ClaudeCLI:
                             tinfo["timed_out"] = True
                             _kill_tree(p)
                             asyncio.run_coroutine_threadsafe(queue.put({"__error__":
-                                f"Claude không phản hồi {int(IDLE)}s — đã dừng để tránh treo server. "
+                                f"Claude không phản hồi {int(IDLE)}s - đã dừng để tránh treo server. "
                                 f"(tăng JARVIS_CLAUDE_IDLE_TIMEOUT nếu tác vụ thật sự dài)"}), loop)
                             return
                         time.sleep(5)
@@ -504,7 +504,7 @@ class ClaudeCLI:
 
 
 # ============================================================
-# Codex CLI — chạy `codex exec --json` cho provider ChatGPT OAuth (gói subscription).
+# Codex CLI - chạy `codex exec --json` cho provider ChatGPT OAuth (gói subscription).
 # Giống cách Hermes spawn codex (app-server); ta dùng `exec` gọn hơn. codex tự lo
 # subscription auth (~/.codex/auth.json) + MCP (~/.codex/config.toml) + tool NATIVE
 # → ChatGPT subscription DÙNG ĐƯỢC MCP (điều mà raw HTTP endpoint không làm được).
@@ -543,7 +543,7 @@ class CodexCLI:
         self.model = model              # gpt-5.5 / gpt-5.4 ...
         self.instructions = instructions
         self.extra_config = []          # list '-c key=value' (override config, vd thêm mcp_servers)
-        self.profile = None             # tên profile codex (-p) — Jarvis ghi jarvis.config.toml để thêm MCP
+        self.profile = None             # tên profile codex (-p) - Jarvis ghi jarvis.config.toml để thêm MCP
 
     def is_available(self) -> bool:
         return self.cli_path is not None
@@ -587,7 +587,7 @@ class CodexCLI:
                             tinfo["timed_out"] = True
                             _kill_tree(p)
                             asyncio.run_coroutine_threadsafe(queue.put({"__error__":
-                                f"Codex không phản hồi {int(IDLE)}s — đã dừng để tránh treo server."}), loop)
+                                f"Codex không phản hồi {int(IDLE)}s - đã dừng để tránh treo server."}), loop)
                             return
                         time.sleep(5)
                 threading.Thread(target=_watchdog, args=(proc,), daemon=True).start()

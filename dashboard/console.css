@@ -1,5 +1,5 @@
 /* ============================================
-   JARVIS OS — Console layer (sidebar + pages)
+   JARVIS OS - Console layer (sidebar + pages)
    Tông màu kế thừa style.css (:root). Glassmorphism + glow.
    Cockpit (.hud) giữ nguyên; layer này bọc thêm bên ngoài.
    ============================================ */
@@ -10,7 +10,7 @@
   --glass-brd: rgba(255, 255, 255, 0.08);
   --glow: 0 0 0 1px var(--glass-brd), 0 8px 30px rgba(0, 0, 0, 0.45);
   --rail-anim: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  --topbar-h: 52px;          /* chiều cao header .hud-top — cview chừa ra để header hiện mọi trang */
+  --topbar-h: 52px;          /* chiều cao header .hud-top - cview chừa ra để header hiện mọi trang */
 }
 
 /* Header (.hud-top) thành thanh top TOÀN CỤC: luôn nằm trên cùng, cview quản lý bắt đầu dưới nó.
@@ -61,7 +61,7 @@ body.in-console .hud-actions { display: none; }
   width: 3px; border-radius: 0 3px 3px 0; background: var(--accent);
   box-shadow: 0 0 10px var(--accent);
 }
-/* Select Brain — dời lên navbar (header trái), dùng dropdown sẵn có (.orb-graph-ctl) */
+/* Select Brain - dời lên navbar (header trái), dùng dropdown sẵn có (.orb-graph-ctl) */
 .hud-top .navbar-brain { position: static; z-index: auto; gap: 8px; }
 .hud-top .navbar-brain .graph-select { max-width: 200px; }
 @media (max-width: 860px) {
@@ -84,7 +84,7 @@ body.in-console .hud-actions { display: none; }
 .gcard .gcard-btn { width: 100%; }   /* nút trong card model vẫn full-width */
 .js-actions .gcard-btn { width: auto; }
 
-/* Providers — card kiểu Hermes OAuth (đăng nhập/kết nối) */
+/* Providers - card kiểu Hermes OAuth (đăng nhập/kết nối) */
 .prov-list { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
 .prov-card {
   background: var(--glass); border: 1px solid var(--glass-brd); border-radius: 14px;
@@ -173,7 +173,7 @@ body.in-console .hud-actions { display: none; }
 /* ===== Đẩy cockpit sang phải để chừa rail ===== */
 body.has-rail .hud { margin-left: var(--rail-w); width: calc(100% - var(--rail-w)); }
 
-/* ===== Console view (vùng trang quản lý) — bắt đầu DƯỚI header toàn cục ===== */
+/* ===== Console view (vùng trang quản lý) - bắt đầu DƯỚI header toàn cục ===== */
 .cview {
   position: fixed; top: var(--topbar-h); right: 0; bottom: 0; left: var(--rail-w); z-index: 40;
   display: flex; flex-direction: column;
@@ -247,7 +247,7 @@ body.has-rail .hud { margin-left: var(--rail-w); width: calc(100% - var(--rail-w
 .cview-body .stab-panel { max-width: 1100px; margin: 0; }
 
 /* ============================================
-   RESPONSIVE — điện thoại: rail → thanh đáy
+   RESPONSIVE - điện thoại: rail → thanh đáy
    ============================================ */
 @media (max-width: 860px) {
   :root { --rail-w: 0px; --topbar-h: 46px; }   /* header thấp hơn trên mobile */

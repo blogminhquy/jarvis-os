@@ -1,5 +1,5 @@
 """
-Telegram bot cho Jarvis — long-polling getUpdates, whitelist theo chat_id.
+Telegram bot cho Jarvis - long-polling getUpdates, whitelist theo chat_id.
 - Trả lời chạy ở BACKGROUND task → vẫn nhận /stop giữa chừng.
 - Lệnh /...: command_fn(cmd, arg) -> {"reply": str} | {"ask": str} | None.
 Decoupled: main.py cấp answer_fn (1 lượt chat) + command_fn (xử lý lệnh).
@@ -98,8 +98,8 @@ class TelegramBot:
                     if not data.get("ok"):
                         if data.get("error_code") == 409:
                             self.status = "conflict"
-                            self.last_error = data.get("description") or "409 — token bị poll nơi khác hoặc còn webhook."
-                            print("[telegram] 409 CONFLICT — cùng token đang poll ở nơi khác. Chỉ chạy 1 nơi.", file=sys.stderr)
+                            self.last_error = data.get("description") or "409 - token bị poll nơi khác hoặc còn webhook."
+                            print("[telegram] 409 CONFLICT - cùng token đang poll ở nơi khác. Chỉ chạy 1 nơi.", file=sys.stderr)
                             await asyncio.sleep(20)
                         else:
                             self.status = "error"

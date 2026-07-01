@@ -122,7 +122,7 @@ function handleMessage(data) {
     showToolBar(data.content);
     if (data.tool) trackMCP(data.tool);
   } else if (data.type === "tool_result") {
-    showToolBar("✓ Nhận data — đang phân tích...");
+    showToolBar("✓ Nhận data - đang phân tích...");
   } else if (data.type === "stream") {
     if (!streamingBubble) { streamingBubble = createStreamingBubble(); streamingText = ""; }
     streamingText += (data.content || "");
@@ -142,7 +142,7 @@ function handleMessage(data) {
     if (cards) pushMetricsToPanel(cards);
     // Fallback: response rỗng nhưng đã stream được → giữ phần đã stream; nếu vẫn rỗng → báo nhẹ
     const finalText = clean || streamingText || "";
-    const shownText = finalText || "_(không có nội dung trả về — thử lại hoặc đổi model)_";
+    const shownText = finalText || "_(không có nội dung trả về - thử lại hoặc đổi model)_";
     let bubble;
     if (!streamingBubble) { appendJarvisMessage(shownText); bubble = chatArea.lastChild; }
     else { streamingBubble.querySelector(".bubble").innerHTML = markdownToHtml(shownText); bubble = streamingBubble; streamingBubble = null; streamingText = ""; }
@@ -241,7 +241,7 @@ function restoreSession() {
 }
 
 // ============================================
-// Phiên hội thoại lưu DB (panel Lịch sử — sessions-ui.js gọi qua window.JarvisSessions)
+// Phiên hội thoại lưu DB (panel Lịch sử - sessions-ui.js gọi qua window.JarvisSessions)
 // ============================================
 async function openStoredSession(id) {
   try {
@@ -428,7 +428,7 @@ graphSource.addEventListener("change", () => {
 });
 
 // ============================================
-// Realtime graph watch — node mọc lên khi brain sinh note mới
+// Realtime graph watch - node mọc lên khi brain sinh note mới
 // ============================================
 let graphWs = null;
 let graphWatchReconnect = null;
@@ -474,7 +474,7 @@ async function checkVault() {
       const miss = d.items.filter(i => !i.present).map(i => i.label).join(", ");
       vbText.textContent = d.ok
         ? `Vault chạy được, nhưng thiếu: ${miss}.`
-        : `Cấu trúc vault chưa chuẩn cho Jarvis — thiếu: ${miss}.`;
+        : `Cấu trúc vault chưa chuẩn cho Jarvis - thiếu: ${miss}.`;
       vaultBanner.classList.add("show");
     }
   } catch (e) {}
@@ -500,7 +500,7 @@ vbInit.addEventListener("click", async () => {
 
 document.getElementById("vbClose").addEventListener("click", () => vaultBanner.classList.remove("show"));
 
-// Nhãn concept (HUD brain-region) quanh orb — số liệu THẬT
+// Nhãn concept (HUD brain-region) quanh orb - số liệu THẬT
 function renderConceptLabels(categories, total) {
   const container = document.getElementById("conceptLabels");
   container.innerHTML = "";
@@ -530,7 +530,7 @@ function renderConceptLabels(categories, total) {
   }
 }
 
-// Brain folder tùy chọn — lưu localStorage, hiện trong dropdown
+// Brain folder tùy chọn - lưu localStorage, hiện trong dropdown
 function loadCustomBrains() {
   const brains = JSON.parse(localStorage.getItem("jarvis.brains") || "[]");
   // Xóa option cũ
@@ -633,7 +633,7 @@ function pumpAudioLevel() {
 stopBtn.addEventListener("click", stopCurrent);
 
 // ============================================
-// Starfield nebula — nền vũ trụ, sáng theo nhịp giọng nói
+// Starfield nebula - nền vũ trụ, sáng theo nhịp giọng nói
 // ============================================
 let _thinkingActive = false;
 
@@ -648,7 +648,7 @@ function initStarfield() {
     const rect = cv.parentElement.getBoundingClientRect();
     cv.width = Math.round(rect.width);
     cv.height = Math.round(rect.height);
-    // Ít sao + rải đều, mờ — không tạo cụm lạc
+    // Ít sao + rải đều, mờ - không tạo cụm lạc
     const count = Math.max(40, Math.floor((cv.width * cv.height) / 16000));
     stars = Array.from({ length: count }, () => ({
       x: Math.random() * cv.width,
@@ -672,7 +672,7 @@ function initStarfield() {
     const lvl = voice.getLevel();
     ctx.clearRect(0, 0, cv.width, cv.height);
 
-    // Gradient sáng nhẹ ở TRUNG TÂM — phồng nhẹ theo giọng
+    // Gradient sáng nhẹ ở TRUNG TÂM - phồng nhẹ theo giọng
     const cx = cv.width / 2, cy = cv.height / 2;
     const rr = Math.min(cv.width, cv.height) * (0.6 + lvl * 0.15);
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
@@ -683,7 +683,7 @@ function initStarfield() {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, cv.width, cv.height);
 
-    // Grid floor phối cảnh (HUD command center) — đáy màn hình
+    // Grid floor phối cảnh (HUD command center) - đáy màn hình
     const horizonY = cv.height * 0.72;
     const vpX = cv.width / 2;
     ctx.strokeStyle = `rgba(165,115,230,${0.13 + lvl * 0.10})`;
@@ -700,7 +700,7 @@ function initStarfield() {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke();
     }
 
-    // Sóng nơron khi đang suy nghĩ — vòng lan toả CHẬM, dịu (bỏ tia nhấp nháy cho đỡ rối)
+    // Sóng nơron khi đang suy nghĩ - vòng lan toả CHẬM, dịu (bỏ tia nhấp nháy cho đỡ rối)
     if (_thinkingActive) {
       const now = Date.now();
       const ringCount = 2;
@@ -757,7 +757,7 @@ async function loadMetrics(opts = {}) {
       // Không có MCP/dữ liệu kinh doanh → fallback: số agent/skill/workflow (lớp Agentic)
       const fb = await agenticFallbackCards();
       if (fb.length) {
-        renderMetrics(fb, "Chưa có nguồn dữ liệu kinh doanh — hiện lớp Agentic");
+        renderMetrics(fb, "Chưa có nguồn dữ liệu kinh doanh - hiện lớp Agentic");
         savedMetrics = { cards: fb, status: "Lớp Agentic", agentic: true };
         persistSession();
       } else if (!opts.silent || !hasCards) {
@@ -808,7 +808,7 @@ function renderMetrics(cards, statusText) {
     div.style.setProperty("--card-accent", accent);
     div.innerHTML = `
       <div class="m-label">${escapeHtml(c.label || "")}</div>
-      <div class="m-value">${escapeHtml(c.value || "—")}</div>
+      <div class="m-value">${escapeHtml(c.value || "-")}</div>
       <div class="m-sub ${trendClass}">${escapeHtml(c.sub || "")}</div>`;
     metricCards.appendChild(div);
   });
@@ -865,7 +865,7 @@ async function loadMemStats() {
 }
 
 // ============================================
-// Lớp Agentic — số agent / skill / workflow ở đáy graph
+// Lớp Agentic - số agent / skill / workflow ở đáy graph
 // ============================================
 function _setStat(id, n) {
   const el = document.getElementById(id);
@@ -924,7 +924,7 @@ async function doReflect(auto) {
 
 learnBtn.addEventListener("click", () => doReflect(false));
 
-// Tự học định kỳ trong phiên dài — gọi sau mỗi N lượt
+// Tự học định kỳ trong phiên dài - gọi sau mỗi N lượt
 function maybeAutoLearn() {
   turnsSinceReflect++;
   if (autoLearn && !reflecting && turnsSinceReflect >= AUTO_LEARN_EVERY) {
@@ -987,7 +987,7 @@ async function uploadFile(file) {
   pendingAttachments.push(att);
   renderChips();
   try {
-    // Chỉ STAGE để Jarvis đọc — KHÔNG tự convert/lưu. Lưu Sources chỉ khi user yêu cầu.
+    // Chỉ STAGE để Jarvis đọc - KHÔNG tự convert/lưu. Lưu Sources chỉ khi user yêu cầu.
     const fd = new FormData();
     fd.append("file", file, att.name);
     fd.append("brain", currentBrainPath());
@@ -1073,7 +1073,7 @@ voiceBtn.addEventListener("click", () => {
   }
 });
 
-// Tự nghe lại khi rảnh (không đang xử lý, không đang nói) — giữ mic sống ở hands-free
+// Tự nghe lại khi rảnh (không đang xử lý, không đang nói) - giữ mic sống ở hands-free
 setInterval(() => {
   if (handsFree && !voice.isListening && !isProcessing && !voice.isSpeaking()) {
     voice.startListening();
@@ -1083,7 +1083,7 @@ setInterval(() => {
 let spacePressed = false;
 document.addEventListener("keydown", (e) => {
   // KHÔNG cướp phím Space khi con trỏ đang ở BẤT KỲ ô nhập nào (input/textarea/select/
-  // contenteditable) — nếu không sẽ không gõ được dấu cách trong form skill, editor file, settings…
+  // contenteditable) - nếu không sẽ không gõ được dấu cách trong form skill, editor file, settings…
   const _ae = document.activeElement;
   const _typing = _ae && (_ae.tagName === "INPUT" || _ae.tagName === "TEXTAREA" || _ae.tagName === "SELECT" || _ae.isContentEditable);
   if (e.code === "Space" && !handsFree && !spacePressed && !_typing) {
@@ -1158,13 +1158,13 @@ const loopRunNow = document.getElementById("loopRunNow");
 const lintBtn = document.getElementById("lintBtn");
 
 function fmtClock(ts) {
-  if (!ts) return "—";
+  if (!ts) return "-";
   return new Date(ts * 1000).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 }
 function renderLoopStatus(c) {
   loopStatus.className = "loop-status";
   if (c.running) { loopStatus.classList.add("running"); loopStatus.textContent = "⏳ Đang chạy một vòng..."; return; }
-  if (!c.enabled) { loopStatus.textContent = "Tắt — bật để Jarvis tự chạy nền"; return; }
+  if (!c.enabled) { loopStatus.textContent = "Tắt - bật để Jarvis tự chạy nền"; return; }
   loopStatus.classList.add("on");
   const goalTxt = c.goal === "brain" ? "bộ não" : "chỉ số KD";
   const last = c.last_run ? `lần cuối ${fmtClock(c.last_run)}` : "chưa chạy";
@@ -1337,7 +1337,7 @@ async function openSettings() {
     refreshTgStatus();
     document.getElementById("setAuthUser").value = (s.auth && s.auth.username) || "";
     document.getElementById("setAuthState").textContent = (s.auth && s.auth.has_password)
-      ? "✓ Đã đặt mật khẩu — đăng nhập bắt buộc." : "⚠ Chưa đặt mật khẩu — ai mở trang cũng dùng được. Đặt mật khẩu trước khi lên VPS.";
+      ? "✓ Đã đặt mật khẩu - đăng nhập bắt buộc." : "⚠ Chưa đặt mật khẩu - ai mở trang cũng dùng được. Đặt mật khẩu trước khi lên VPS.";
   } catch (e) {}
 }
 function _saveSetting(section, dataObj, btn) {
@@ -1498,14 +1498,14 @@ if (document.getElementById("wzFinish")) {
   });
 }
 
-// Wizard — chọn nhà cung cấp (card radio) + hiện ô key OpenRouter + gợi ý cách kết nối
+// Wizard - chọn nhà cung cấp (card radio) + hiện ô key OpenRouter + gợi ý cách kết nối
 (function () {
   const cards = document.querySelectorAll("#wzProv .wz-card");
   if (!cards.length) return;
   const orKey = document.getElementById("wzOrKey");
   const hint = document.getElementById("wzProvHint");
   const HINTS = {
-    "anthropic-cli": "Sau khi vào: đăng nhập Claude 1 lần — chạy <code>claude auth login --claudeai</code> trong terminal (Hostinger: App terminal).",
+    "anthropic-cli": "Sau khi vào: đăng nhập Claude 1 lần - chạy <code>claude auth login --claudeai</code> trong terminal (Hostinger: App terminal).",
     "openai-oauth": "Sau khi vào: mục <b>Models</b> → đăng nhập ChatGPT (hoặc <code>codex login</code> trong terminal).",
     "openrouter": "Lấy key tại <a href='https://openrouter.ai/keys' target='_blank' style='color:#bcd2ff'>openrouter.ai/keys</a> rồi dán ở trên (hoặc sau ở Models).",
   };

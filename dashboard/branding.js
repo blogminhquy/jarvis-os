@@ -1,4 +1,4 @@
-/* branding.js — đổi logo/avatar + cấu hình tên miền riêng (HTTPS).
+/* branding.js - đổi logo/avatar + cấu hình tên miền riêng (HTTPS).
    Tách riêng khỏi app.js (file đó có encoding hỗn hợp, sửa dễ hỏng). Vanilla DOM, không cần Alpine. */
 (function () {
   "use strict";
@@ -92,11 +92,11 @@
         guide.style.display = "block";
       }
       if (j.on_domain) {
-        setStatus("domainStatus", "✓ Bạn đang mở qua tên miền này — HTTPS đã chạy.", false);
+        setStatus("domainStatus", "✓ Bạn đang mở qua tên miền này - HTTPS đã chạy.", false);
       } else if (j.dns_ok) {
         setStatus("domainStatus", "✓ DNS đã trỏ đúng về máy chủ. Mở https://" + j.domain + " để kích hoạt HTTPS.", false);
       } else if (j.dns_ip) {
-        setStatus("domainStatus", "⚠ DNS đang trỏ tới " + j.dns_ip + " — chưa khớp máy chủ (" + (j.server_ip || "?") + "). Sửa lại bản ghi A.", true);
+        setStatus("domainStatus", "⚠ DNS đang trỏ tới " + j.dns_ip + " - chưa khớp máy chủ (" + (j.server_ip || "?") + "). Sửa lại bản ghi A.", true);
       } else {
         setStatus("domainStatus", "⚠ Chưa thấy DNS cho " + j.domain + ". Tạo bản ghi A như Bước 1 rồi kiểm tra lại.", true);
       }

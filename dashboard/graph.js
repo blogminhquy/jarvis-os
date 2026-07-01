@@ -1,5 +1,5 @@
 // ============================================
-// JARVIS OS — Graph Layer (Graphify)
+// JARVIS OS - Graph Layer (Graphify)
 // Force-directed graph trên canvas thuần, không cần thư viện ngoài.
 // Đọc /graph endpoint → vẽ mạng lưới note kết nối qua wikilink.
 // ============================================

@@ -1,5 +1,5 @@
 // ============================================
-// JARVIS OS — Studio: Agents / Skills / Workflows
+// JARVIS OS - Studio: Agents / Skills / Workflows
 // ============================================
 (function () {
   const studio = document.getElementById("studio");
@@ -153,7 +153,7 @@
         if (div) {
           div.classList.add("done");
           const sp = div.querySelector(".rs-spin"); if (sp) sp.outerHTML = `<span class="rs-ok">✓</span>`;
-          if (d.verified === false) div.insertAdjacentHTML("beforeend", `<div class="rs-warn">⚠ Chưa đạt kiểm chứng sau số lần thử — xem lại kết quả</div>`);
+          if (d.verified === false) div.insertAdjacentHTML("beforeend", `<div class="rs-warn">⚠ Chưa đạt kiểm chứng sau số lần thử - xem lại kết quả</div>`);
           const out = document.getElementById(`rs-out-${d.i}`); if (out && !out.textContent.trim()) out.textContent = d.output;
         }
       } else if (d.type === "step_error") {
@@ -178,7 +178,7 @@
     const box = document.getElementById("editorBox");
     const steps = w ? JSON.parse(JSON.stringify(w.steps || [])) : [{ agent: agentsCache[0].slug, task: "" }];
     const opts = (sel) => agentsCache.map(a => `<option value="${a.slug}" ${a.slug === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
-    const optsV = (sel) => `<option value="">— không kiểm chứng —</option>` + agentsCache.map(a => `<option value="${a.slug}" ${a.slug === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
+    const optsV = (sel) => `<option value="">- không kiểm chứng -</option>` + agentsCache.map(a => `<option value="${a.slug}" ${a.slug === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
     function render() {
       box.innerHTML = `
         <h3>${w ? "Sửa" : "Tạo"} Workflow</h3>
@@ -253,7 +253,7 @@
       <label>Tên</label><input id="agName" value="${esc(a ? a.name : "")}">
       <label>Vai trò (mô tả ngắn)</label><input id="agRole" value="${esc(a ? a.role : "")}">
       <label>System prompt (cách làm việc chi tiết)</label><textarea id="agPrompt" rows="4">${esc(a ? (a.prompt || "") : "")}</textarea>
-      <label>Skills</label><div class="skill-pick" id="skillPick">${skills.length ? skills.map(s => `<label class="sp"><input type="checkbox" value="${esc(s.slug)}" ${a && (a.skills || []).includes(s.slug) ? "checked" : ""}> ${esc(s.name)}</label>`).join("") : '<span class="dim">Vault chưa có skill trong .claude/skills — vẫn tạo agent được, gán skill sau.</span>'}</div>
+      <label>Skills</label><div class="skill-pick" id="skillPick">${skills.length ? skills.map(s => `<label class="sp"><input type="checkbox" value="${esc(s.slug)}" ${a && (a.skills || []).includes(s.slug) ? "checked" : ""}> ${esc(s.name)}</label>`).join("") : '<span class="dim">Vault chưa có skill trong .claude/skills - vẫn tạo agent được, gán skill sau.</span>'}</div>
       <label>Model</label><select id="agModel"><option value="sonnet">Sonnet</option><option value="opus">Opus</option><option value="haiku">Haiku</option></select>
       <div class="editor-actions"><button class="s-btn-ghost" id="cancelEd">Huỷ</button><button class="s-btn" id="saveAg">Lưu</button></div>`;
     if (a && a.model) box.querySelector("#agModel").value = a.model;
@@ -302,7 +302,7 @@
           <div class="wf-name">${a.builtin ? "🔁 " : (a.source === "cloud" ? "☁ " : "")}${esc(a.name)} <span class="wf-status ${active ? "on" : "off"}">${active ? "ĐANG CHẠY" : "TẮT"}</span></div>
           <label class="toggle"><input type="checkbox" ${active ? "checked" : ""}><span></span></label>
         </div>
-        <div class="wf-desc">⏰ ${esc(a.schedule || "—")} · <span class="dim">${typeLabel}</span></div>
+        <div class="wf-desc">⏰ ${esc(a.schedule || "-")} · <span class="dim">${typeLabel}</span></div>
         ${a.note ? `<div class="wf-steps">${esc(a.note)}</div>` : ""}
         <div class="wf-actions">${a.builtin
           ? `<span class="dim" style="font-size:13px">Cấu hình ở panel “Vòng lặp tự cải thiện”</span>`
@@ -323,9 +323,9 @@
     box.innerHTML = `<h3>${a ? "Sửa" : "Thêm"} lịch tự động</h3>
       <label>Tên</label><input id="auName" value="${esc(a ? a.name : "")}">
       <label>Loại</label><select id="auType">
-        <option value="cron">Cron — lịch giờ cố định</option>
-        <option value="trigger">Trigger — RemoteTrigger / sự kiện</option>
-        <option value="routine">Routine — scheduled agent</option>
+        <option value="cron">Cron - lịch giờ cố định</option>
+        <option value="trigger">Trigger - RemoteTrigger / sự kiện</option>
+        <option value="routine">Routine - scheduled agent</option>
       </select>
       <label>Lịch / mô tả (vd "7h sáng hằng ngày")</label><input id="auSched" value="${esc(a ? a.schedule : "")}">
       <label>Ghi chú / ID (vd trig_01A9...)</label><input id="auNote" value="${esc(a ? a.note : "")}">
@@ -424,7 +424,7 @@
     list.forEach(s => {
       const on = s.enabled !== false;
       const div = document.createElement("div"); div.className = "sk2-card" + (on ? "" : " off");
-      div.innerHTML = `<input type="checkbox" class="sk2-tog" ${on ? "checked" : ""} title="${on ? "Đang bật — bấm để tắt" : "Đang tắt — bấm để bật"}">
+      div.innerHTML = `<input type="checkbox" class="sk2-tog" ${on ? "checked" : ""} title="${on ? "Đang bật - bấm để tắt" : "Đang tắt - bấm để bật"}">
         <div class="sk2-info"><div class="nm">🧩 ${esc(s.name)}</div><div class="ds">${esc(s.description || "")}</div><div class="gp">📂 ${esc(s.group || "Chung")} · ${esc(s.slug)}${s.source === ".agents" ? " · .agents" : ""}</div></div>
         <div class="sk2-act"><button class="edit">Sửa</button><button class="del danger">Xoá</button></div>`;
       div.querySelector(".sk2-tog").onchange = (e) => toggleSkill(s, e.target.checked);
@@ -451,8 +451,8 @@
         <div><label>Tên skill</label><input id="skName" class="js-input" value="${esc(sk.name)}" placeholder="VD: Viết email bán hàng"></div>
         <div><label>Nhóm</label><input id="skGroup" class="js-input" list="skGroupList" value="${esc(sk.group || "Chung")}" placeholder="VD: Marketing">
           <datalist id="skGroupList">${groupOpts}</datalist></div>
-        <div><label>Mô tả (description — quyết định khi nào skill kích hoạt)</label><textarea id="skDesc" class="js-input" style="min-height:60px">${esc(sk.description || "")}</textarea></div>
-        <div><label>Nội dung (SKILL.md — hướng dẫn cho AI)</label><textarea id="skBody" class="js-input" style="min-height:200px;font-family:ui-monospace,monospace">${esc(sk.body || "")}</textarea></div>
+        <div><label>Mô tả (description - quyết định khi nào skill kích hoạt)</label><textarea id="skDesc" class="js-input" style="min-height:60px">${esc(sk.description || "")}</textarea></div>
+        <div><label>Nội dung (SKILL.md - hướng dẫn cho AI)</label><textarea id="skBody" class="js-input" style="min-height:200px;font-family:ui-monospace,monospace">${esc(sk.body || "")}</textarea></div>
         <div style="display:flex;gap:10px"><button class="s-btn" id="skSave">💾 Lưu</button><button class="s-btn-ghost" id="skCancel">Huỷ</button></div>
       </div>`;
     panel.querySelector("#skCancel").onclick = () => loadSkills();

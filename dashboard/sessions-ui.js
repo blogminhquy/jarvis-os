@@ -1,5 +1,5 @@
 // ============================================================
-// Jarvis — Panel "Lịch sử hội thoại" (sessions). Tự chứa, không đụng layout.
+// Jarvis - Panel "Lịch sử hội thoại" (sessions). Tự chứa, không đụng layout.
 // Gọi backend /sessions* và window.JarvisSessions (app.js) để mở/tạo phiên.
 // ============================================================
 (function () {

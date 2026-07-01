@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # ============================================================================
-# Jarvis OS — container image
+# Jarvis OS - container image
 # "Brain" = Claude Code CLI (npm global). FastAPI app served by uvicorn.
 # Code tree is immutable; ALL mutable state lives on the /data volume and the
 # Claude auth volume (~/.claude). Pattern adapted from Hermes Agent's Dockerfile
@@ -38,10 +38,10 @@ RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CLI_VERSION}" \
     && npm cache clean --force \
     && claude --version
 
-# Codex CLI — cho provider ChatGPT subscription (OpenAI OAuth). BEST-EFFORT: lỗi cài KHÔNG làm hỏng
+# Codex CLI - cho provider ChatGPT subscription (OpenAI OAuth). BEST-EFFORT: lỗi cài KHÔNG làm hỏng
 # build (Claude vẫn chạy). Đăng nhập 1 lần bằng `codex login` trong terminal (token lưu ở volume .codex).
 RUN (npm install -g @openai/codex && npm cache clean --force && codex --version) \
-    || echo "[build] codex cài KHÔNG thành công — provider ChatGPT subscription sẽ không dùng được (các provider khác vẫn chạy)."
+    || echo "[build] codex cài KHÔNG thành công - provider ChatGPT subscription sẽ không dùng được (các provider khác vẫn chạy)."
 
 WORKDIR /app
 

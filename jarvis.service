@@ -1,4 +1,4 @@
-# /etc/systemd/system/jarvis.service — native (non-Docker) systemd unit.
+# /etc/systemd/system/jarvis.service - native (non-Docker) systemd unit.
 # Install:
 #   sudo cp jarvis.service /etc/systemd/system/jarvis.service
 #   sudo sed -i "s|__APP_DIR__|$(pwd)|g; s|__USER__|$(whoami)|g" /etc/systemd/system/jarvis.service

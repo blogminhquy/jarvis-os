@@ -1,5 +1,5 @@
 // ============================================
-// JARVIS OS — Console layer (sidebar + router)
+// JARVIS OS - Console layer (sidebar + router)
 // Bọc ngoài cockpit: rail điều hướng + trang quản lý. KHÔNG sửa app.js.
 // Graph 3D tự pause khi rời cockpit (qua window.__jarvisGraph). Alpine cho UI.
 // Thêm trang mới = thêm 1 mục vào RAIL_ITEMS + 1 case trong renderPage().
@@ -64,7 +64,7 @@
     account:     { icon: "⚙", label: "Tài khoản", sub: "Đăng nhập & workspace" },
   };
 
-  // 4 trang tách từ Studio cũ — render container rồi gọi loader trong studio.js (window.JarvisStudio).
+  // 4 trang tách từ Studio cũ - render container rồi gọi loader trong studio.js (window.JarvisStudio).
   const STUDIO_PAGES = ["workflows", "agents", "skills", "automations"];
 
   let _settings = null;
@@ -141,7 +141,7 @@
     const m = VIEW_META[id] || {};
     return `<div class="cview-placeholder">
       <div class="ph-ico">${m.icon || "✦"}</div>
-      <div><b>${esc(m.label || id)}</b> — đang phát triển</div>
+      <div><b>${esc(m.label || id)}</b> - đang phát triển</div>
       <div style="max-width:380px;font-size:14px;opacity:.7">${esc(note || "Trang này là chỗ cắm chức năng mở rộng sau. Khung điều hướng đã sẵn sàng.")}</div>
     </div>`;
   }
@@ -230,8 +230,8 @@
       catch (e) { listEl.innerHTML = `<div class="empty" style="padding:20px;color:#d98">Lỗi kết nối: ${esc(e.message)}</div>`; return; }
       if (!resp.ok || d.error) {
         const msg = d.error || (resp.status === 404
-          ? "Máy chủ Jarvis chưa có chức năng Tệp tin — hãy KHỞI ĐỘNG LẠI server (stop-jarvis.bat → start-jarvis.vbs) rồi tải lại trang."
-          : resp.status === 401 ? "Phiên đăng nhập hết hạn — tải lại trang & đăng nhập."
+          ? "Máy chủ Jarvis chưa có chức năng Tệp tin - hãy KHỞI ĐỘNG LẠI server (stop-jarvis.bat → start-jarvis.vbs) rồi tải lại trang."
+          : resp.status === 401 ? "Phiên đăng nhập hết hạn - tải lại trang & đăng nhập."
           : "Lỗi máy chủ (" + resp.status + ").");
         listEl.innerHTML = `<div class="empty" style="padding:20px;color:#d98">⚠ ${esc(msg)}</div>`; return;
       }
@@ -280,9 +280,9 @@
       catch (e) { card.querySelector(".fm-readbox").innerHTML = `<span style="color:#d98">Lỗi: ${esc(e.message)}</span>`; return; }
       const dlUrl = `/files/download?brain=${encodeURIComponent(fbrain())}&path=${encodeURIComponent(rel)}`;
       if (!resp.ok || d.error) {
-        const m = d.error || (resp.status === 404 ? "Server chưa có chức năng Tệp tin — khởi động lại server Jarvis."
-          : resp.status === 401 ? "Hết phiên đăng nhập — tải lại trang." : "Lỗi (" + resp.status + ")");
-        card.querySelector(".fm-readbox").innerHTML = `<span>${esc(m)} — <a href="${dlUrl}" target="_blank" style="color:#bcd2ff">Tải về</a></span>`;
+        const m = d.error || (resp.status === 404 ? "Server chưa có chức năng Tệp tin - khởi động lại server Jarvis."
+          : resp.status === 401 ? "Hết phiên đăng nhập - tải lại trang." : "Lỗi (" + resp.status + ")");
+        card.querySelector(".fm-readbox").innerHTML = `<span>${esc(m)} - <a href="${dlUrl}" target="_blank" style="color:#bcd2ff">Tải về</a></span>`;
         return;
       }
       const head = `<div class="fm-vhead"><b>${esc(d.name)}</b><span>${d.editable ? '<button id="fmSave">💾 Lưu</button>' : '<a href="' + dlUrl + '" target="_blank"><button>⤓ Tải</button></a>'}<button id="fmVClose">✕</button></span></div>`;
@@ -349,7 +349,7 @@
       .map(([v, l]) => `<button class="si-chip ${cfg.mode === v ? "sel" : ""}" data-mode="${v}">${l}</button>`).join("");
     const goalDesc = (GOALS.find(g => g[0] === cfg.goal) || GOALS[0])[2];
     el.innerHTML = `<div class="cview-section">
-      <p style="color:#9fb0cf;font-size:15px;max-width:640px;margin:0 0 16px">Jarvis tự thức theo lịch, làm <b>một nhiệm vụ cụ thể</b> rồi tự kiểm chứng và ghi log. An toàn: chỉ thao tác FILE trong vault — KHÔNG tự gọi MCP tạo đơn, đốt tiền, đăng bài.</p>
+      <p style="color:#9fb0cf;font-size:15px;max-width:640px;margin:0 0 16px">Jarvis tự thức theo lịch, làm <b>một nhiệm vụ cụ thể</b> rồi tự kiểm chứng và ghi log. An toàn: chỉ thao tác FILE trong vault - KHÔNG tự gọi MCP tạo đơn, đốt tiền, đăng bài.</p>
       <div class="si-grid">
         <div class="si-field"><label>Bật chạy nền</label>
           <button class="si-chip ${cfg.enabled ? "sel" : ""}" id="siEnabled">${cfg.enabled ? "● Đang bật" : "○ Đang tắt"}</button></div>
@@ -423,7 +423,7 @@
   }
 
   async function freshSettings() {
-    // Timeout 6s: nếu /settings chậm/treo thì KHÔNG để panel kẹt "Đang tải..." mãi — dùng cache cũ
+    // Timeout 6s: nếu /settings chậm/treo thì KHÔNG để panel kẹt "Đang tải..." mãi - dùng cache cũ
     // (hoặc {}) để vẫn hiện providers/cấu hình ngay, refresh lần sau.
     try {
       const ctrl = new AbortController();
@@ -441,7 +441,7 @@
     const s = await freshSettings();
     const m = s.model || {};
     const eng = m.engine === "openrouter" ? "OpenRouter (chat thuần)" : "Claude CLI (đầy đủ MCP)";
-    const curModel = m.engine === "openrouter" ? (m.openrouter_model || "—") : (m.claude_model || "mặc định");
+    const curModel = m.engine === "openrouter" ? (m.openrouter_model || "-") : (m.claude_model || "mặc định");
     const tg = s.telegram || {};
     const dash = s.dashboard || {};
     const gOn = dash.graph_enabled !== false;
@@ -543,10 +543,10 @@
           backButOld++;                                     // server sống lại nhưng vẫn bản cũ
           if (backButOld >= 3) {
             clearInterval(poll);
-            st.innerHTML = "⚠ Server đã lên lại nhưng phiên bản chưa đổi — cập nhật có thể thất bại. Xem <code>update.log</code> / <code>docker compose logs</code>.";
+            st.innerHTML = "⚠ Server đã lên lại nhưng phiên bản chưa đổi - cập nhật có thể thất bại. Xem <code>update.log</code> / <code>docker compose logs</code>.";
           }
-        } catch (e) { backButOld = 0; /* server đang restart — tiếp tục chờ */ }
-        if (tries > 45) { clearInterval(poll); st.innerHTML = "Server chưa lên lại sau ~3 phút — thử tải lại trang."; }
+        } catch (e) { backButOld = 0; /* server đang restart - tiếp tục chờ */ }
+        if (tries > 45) { clearInterval(poll); st.innerHTML = "Server chưa lên lại sau ~3 phút - thử tải lại trang."; }
       }, 4000);
     };
     ovLoadVersion();
@@ -617,7 +617,7 @@
           </div>
         </div>`;
       }
-      if (p.kind === "cli") {   // Claude Code — trạng thái + login/logout nạp động qua /claude/status
+      if (p.kind === "cli") {   // Claude Code - trạng thái + login/logout nạp động qua /claude/status
         return `<div class="prov-card ${p.is_main ? "main" : ""}">
           <div class="prov-head">
             <span class="prov-shield on">${_shield(true)}</span>
@@ -635,7 +635,7 @@
         ${provHead(p, on, p.kind === "cli" ? "MCP/skill" : "chat", (on ? "● Đã kết nối" : "○ Chưa kết nối") + " · " + p.models.length + " model")}
         ${p.needs_key
           ? `<div class="prov-action"><input class="js-input" id="pk-${p.id}" type="password" placeholder="${on ? "đổi key (•••" + esc(masked) + ")" : "dán API key để kết nối"}"><button class="gcard-btn" data-pk="${p.id}">${on ? "Đổi key" : "Kết nối"}</button>${on ? `<button class="gcard-btn" data-disc="${p.id}" style="background:transparent;opacity:.75">Ngắt</button>` : ""}</div>`
-          : `<div class="prov-note">Dùng đăng nhập Claude Code — không cần key</div>`}
+          : `<div class="prov-note">Dùng đăng nhập Claude Code - không cần key</div>`}
       </div>`;
     };
 
@@ -643,8 +643,8 @@
       <div class="cview-section">
         <h3>◆ Main Model <span style="opacity:.5">model chính cho hội thoại</span></h3>
         <div class="gcard current" style="max-width:540px">
-          <div class="gcard-top"><span class="gcard-name">${esc(main.model || "—")}</span><span class="gcard-tag">${esc(mainP.label || main.provider || "")}</span></div>
-          <div class="gcard-meta">${mainP.kind === "cli" ? "Qua Claude Code — đầy đủ MCP/skill/loop" : (mainP.kind === "api" ? "Gọi API thẳng — chat thuần (không MCP)" : "")}</div>
+          <div class="gcard-top"><span class="gcard-name">${esc(main.model || "-")}</span><span class="gcard-tag">${esc(mainP.label || main.provider || "")}</span></div>
+          <div class="gcard-meta">${mainP.kind === "cli" ? "Qua Claude Code - đầy đủ MCP/skill/loop" : (mainP.kind === "api" ? "Gọi API thẳng - chat thuần (không MCP)" : "")}</div>
           <button class="gcard-btn" id="mdChange">Đổi model ▾</button>
         </div>
       </div>
@@ -662,7 +662,7 @@
       <div class="cview-section">
         <h3>◆ Suy nghĩ <span style="opacity:.5">độ sâu reasoning khi trả lời</span></h3>
         <div class="gcard" style="max-width:540px">
-          <div class="gcard-meta">Bật để model suy nghĩ kỹ hơn trước khi trả lời — chính xác hơn nhưng chậm & tốn token hơn. Claude API/OpenRouter dùng adaptive thinking + effort; OpenAI chỉ áp cho model o-series; Claude Code chèn gợi ý think/ultrathink.</div>
+          <div class="gcard-meta">Bật để model suy nghĩ kỹ hơn trước khi trả lời - chính xác hơn nhưng chậm & tốn token hơn. Claude API/OpenRouter dùng adaptive thinking + effort; OpenAI chỉ áp cho model o-series; Claude Code chèn gợi ý think/ultrathink.</div>
           <div class="aux-chips">${reasonChips}</div>
         </div>
       </div>`;
@@ -790,7 +790,7 @@
     catch (e) { if (msg) msg.textContent = "Lỗi kết nối server."; return; }
     if (d.error) { if (msg) msg.textContent = "Lỗi: " + d.error; return; }
     try { window.open(d.verification_uri, "_blank"); } catch (e) {}
-    if (msg) msg.innerHTML = `Mở <a href="${esc(d.verification_uri)}" target="_blank">${esc(d.verification_uri)}</a> · nhập mã <b style="font-size:1.15em;letter-spacing:1px">${esc(d.user_code)}</b> <span style="opacity:.6">— đang chờ…</span>`;
+    if (msg) msg.innerHTML = `Mở <a href="${esc(d.verification_uri)}" target="_blank">${esc(d.verification_uri)}</a> · nhập mã <b style="font-size:1.15em;letter-spacing:1px">${esc(d.user_code)}</b> <span style="opacity:.6">- đang chờ…</span>`;
     const iv = Math.max(2, (d.interval || 5)) * 1000;
     const t0 = Date.now();
     const poll = async () => {
@@ -811,7 +811,7 @@
     if (!modal) { modal = document.createElement("div"); modal.id = "modelPicker"; modal.className = "mp-overlay"; document.body.appendChild(modal); }
     let selProv = main.provider || (providers[0] && providers[0].id);
     let selModel = (providers.find(p => p.id === selProv) || {}).is_main ? main.model : null;
-    const liveCache = {};      // pid -> {models:[], live:bool} — model load động từ API provider
+    const liveCache = {};      // pid -> {models:[], live:bool} - model load động từ API provider
     let loadingProv = null;
 
     const modelsFor = (pid) => (liveCache[pid] && liveCache[pid].models) || (providers.find(x => x.id === pid) || {}).models || [];
@@ -843,7 +843,7 @@
       modal.innerHTML = `
         <div class="mp-box">
           <div class="mp-head">
-            <div><div class="mp-title">SET MAIN MODEL</div><div class="mp-sub">hiện tại: ${esc(main.model || "—")} · ${esc(main.provider || "")}</div></div>
+            <div><div class="mp-title">SET MAIN MODEL</div><div class="mp-sub">hiện tại: ${esc(main.model || "-")} · ${esc(main.provider || "")}</div></div>
             <button class="mp-x" data-act="close">✕</button>
           </div>
           <input class="mp-filter" placeholder="Lọc provider / model…">
@@ -887,7 +887,7 @@
     modal.classList.add("open");
   }
 
-  // ---- Trang MCP — quản lý server công cụ ngoài cho engine Claude Code ----
+  // ---- Trang MCP - quản lý server công cụ ngoài cho engine Claude Code ----
   async function postJson(url, obj) {
     try { return await (await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj || {}) })).json(); }
     catch (e) { return { ok: false, error: String(e) }; }
@@ -922,7 +922,7 @@
       </div>
     </div>`;
   }
-  function ambientCard(s) {   // MCP sẵn trong Claude Code — chỉ hiển thị
+  function ambientCard(s) {   // MCP sẵn trong Claude Code - chỉ hiển thị
     const ok = s.connected;
     return `<div class="prov-card" style="opacity:.92">
       <div class="prov-head">
@@ -944,14 +944,14 @@
     const provs = (st.model && st.model.providers) || [];
     const MCP_PROVIDERS = ["anthropic-cli", "openrouter", "openai"];
     const mainHasMcp = MCP_PROVIDERS.includes(main.provider);
-    const mainLabel = (provs.find(p => p.id === main.provider) || {}).label || main.provider || "—";
+    const mainLabel = (provs.find(p => p.id === main.provider) || {}).label || main.provider || "-";
     let warn = "";
     if (!mainHasMcp) {
       const oauth = main.provider === "openai-oauth";
       if (oauth) {
-        warn = `<div class="gcard" style="border:1px solid #2c7a4b;background:rgba(44,122,75,.10);max-width:740px;margin-bottom:14px"><div class="gcard-meta" style="opacity:1">✓ <b>ChatGPT (gói subscription)</b> chạy qua <b>Codex CLI</b> — Jarvis tự đẩy MCP của bạn (các server bên dưới) sang Codex, nên <b>dùng được MCP của Jarvis</b> luôn. Lần đầu mỗi tin nhắn kết nối MCP nên hơi chậm.</div></div>`;
+        warn = `<div class="gcard" style="border:1px solid #2c7a4b;background:rgba(44,122,75,.10);max-width:740px;margin-bottom:14px"><div class="gcard-meta" style="opacity:1">✓ <b>ChatGPT (gói subscription)</b> chạy qua <b>Codex CLI</b> - Jarvis tự đẩy MCP của bạn (các server bên dưới) sang Codex, nên <b>dùng được MCP của Jarvis</b> luôn. Lần đầu mỗi tin nhắn kết nối MCP nên hơi chậm.</div></div>`;
       } else {
-        warn = `<div class="gcard" style="border:1px solid #b9821f;background:rgba(185,130,31,.10);max-width:740px;margin-bottom:14px"><div class="gcard-meta" style="opacity:1">⚠ Main Model đang là <b>${esc(mainLabel)}</b> — <b>chưa hỗ trợ MCP</b>. Dùng MCP qua <b>Claude Code</b>, <b>OpenRouter</b> hoặc <b>OpenAI</b>. Đổi ở trang <b>Models</b>.</div></div>`;
+        warn = `<div class="gcard" style="border:1px solid #b9821f;background:rgba(185,130,31,.10);max-width:740px;margin-bottom:14px"><div class="gcard-meta" style="opacity:1">⚠ Main Model đang là <b>${esc(mainLabel)}</b> - <b>chưa hỗ trợ MCP</b>. Dùng MCP qua <b>Claude Code</b>, <b>OpenRouter</b> hoặc <b>OpenAI</b>. Đổi ở trang <b>Models</b>.</div></div>`;
       }
     } else if (main.provider !== "anthropic-cli") {
       warn = `<div class="gcard" style="border:1px solid #2c7a4b;background:rgba(44,122,75,.10);max-width:740px;margin-bottom:14px"><div class="gcard-meta" style="opacity:1">✓ <b>${esc(mainLabel)}</b> dùng được MCP của Jarvis (qua vòng gọi tool). Mỗi tin nhắn kết nối MCP nên hơi chậm hơn.</div></div>`;
@@ -966,7 +966,7 @@
         <div class="prov-list" style="margin-top:12px">${servers.length ? servers.map(mcpCard).join("") : '<div class="mp-empty">Chưa có server. Bấm "+ Thêm server".</div>'}</div>
       </div>
       <div class="cview-section">
-        <h3>◆ MCP từ Claude Code <span style="opacity:.5">tài khoản — chỉ hiển thị</span></h3>
+        <h3>◆ MCP từ Claude Code <span style="opacity:.5">tài khoản - chỉ hiển thị</span></h3>
         <div class="gcard-meta" style="max-width:740px">Các MCP anh đã kết nối sẵn trong Claude Code (đồng bộ từ claude.ai). Engine Claude Code tự dùng các cái "Connected". Đăng nhập/quản lý các cái này trong app Claude, không sửa ở đây.</div>
         <div class="prov-list" id="mcpAmbient" style="margin-top:12px"><div class="mp-empty">Đang tải… (kiểm tra sức khoẻ MCP, hơi lâu)</div></div>
       </div>`;
@@ -1043,7 +1043,7 @@
     modal.classList.add("open");
   }
 
-  // ---- Trang Kênh (Telegram) — form đầy đủ ----
+  // ---- Trang Kênh (Telegram) - form đầy đủ ----
   async function renderChannels(el) {
     el.innerHTML = `<div class="cview-placeholder"><div class="ph-ico">✉</div><div>Đang tải...</div></div>`;
     const s = await freshSettings();
@@ -1066,10 +1066,10 @@
     async function refreshTgStatus() {
       let d; try { d = await (await fetch("/telegram/status")).json(); } catch (e) { return; }
       let line;
-      if (!d.enabled) line = "⚪ Bot CHƯA bật — tích 'Bật bot Telegram' rồi Lưu (test gửi được KHÔNG có nghĩa bot đang nhận tin).";
+      if (!d.enabled) line = "⚪ Bot CHƯA bật - tích 'Bật bot Telegram' rồi Lưu (test gửi được KHÔNG có nghĩa bot đang nhận tin).";
       else if (!d.token_set) line = "⚪ Chưa có bot token.";
-      else if (d.status === "polling") line = "🟢 Bot đang nhận tin — nhắn cho bot là Jarvis trả lời.";
-      else if (d.status === "conflict") line = "🔴 409: " + (d.last_error || "token bị poll nơi khác hoặc còn webhook") + " — bot tự xoá webhook khi khởi động; nếu vẫn lỗi thì có nơi khác đang poll cùng token.";
+      else if (d.status === "polling") line = "🟢 Bot đang nhận tin - nhắn cho bot là Jarvis trả lời.";
+      else if (d.status === "conflict") line = "🔴 409: " + (d.last_error || "token bị poll nơi khác hoặc còn webhook") + " - bot tự xoá webhook khi khởi động; nếu vẫn lỗi thì có nơi khác đang poll cùng token.";
       else if (d.status === "error") line = "⚠ Lỗi bot: " + (d.last_error || "");
       else if (d.status === "starting") line = "⏳ Đang khởi động bot…";
       else line = "⚪ Bot đã tắt.";
@@ -1110,7 +1110,7 @@
       <div class="cview-section">
         <h3>Tài khoản đăng nhập</h3>
         <div class="gcard" style="max-width:560px">
-          <div class="gcard-meta">${auth.has_password ? "🔒 Đã đặt mật khẩu · tài khoản: <b>" + esc(auth.username || "admin") + "</b>" : "Chưa đặt mật khẩu — ai mở dashboard cũng dùng được. Đặt mật khẩu nếu đưa lên VPS."}</div>
+          <div class="gcard-meta">${auth.has_password ? "🔒 Đã đặt mật khẩu · tài khoản: <b>" + esc(auth.username || "admin") + "</b>" : "Chưa đặt mật khẩu - ai mở dashboard cũng dùng được. Đặt mật khẩu nếu đưa lên VPS."}</div>
           <label class="js-lbl">Tài khoản</label><input class="js-input" id="acUser" value="${esc(auth.username || "")}" placeholder="admin">
           <label class="js-lbl">Mật khẩu</label><input class="js-input" id="acPass" type="password" placeholder="${auth.has_password ? "đổi mật khẩu" : "đặt mật khẩu"}">
           <div class="js-actions">
@@ -1184,18 +1184,18 @@
         <div class="gcard" style="max-width:560px">
           <label class="js-lbl">Chọn nhà cung cấp</label>
           <select class="js-input" id="vpProvider">
-            ${opt("edge", "Edge TTS — miễn phí (mặc định)", prov)}
-            ${opt("openai", "OpenAI — mượt, đa ngôn ngữ", prov)}
-            ${opt("elevenlabs", "ElevenLabs — tự nhiên nhất", prov)}
+            ${opt("edge", "Edge TTS - miễn phí (mặc định)", prov)}
+            ${opt("openai", "OpenAI - mượt, đa ngôn ngữ", prov)}
+            ${opt("elevenlabs", "ElevenLabs - tự nhiên nhất", prov)}
           </select>
           <div id="vpOpenai" style="display:none">
-            <label class="js-lbl">OpenAI API key ${oaSet ? '<span class="dim">(đã có — để trống nếu không đổi)</span>' : ""}</label>
+            <label class="js-lbl">OpenAI API key ${oaSet ? '<span class="dim">(đã có - để trống nếu không đổi)</span>' : ""}</label>
             <input class="js-input" id="vpOaKey" type="password" placeholder="sk-...">
             <label class="js-lbl">Giọng OpenAI</label>
             <select class="js-input" id="vpOaVoice">${oaVoices.map(x => opt(x, x, v.openai_tts_voice || "alloy")).join("")}</select>
           </div>
           <div id="vpEleven" style="display:none">
-            <label class="js-lbl">ElevenLabs API key ${elSet ? '<span class="dim">(đã có — để trống nếu không đổi)</span>' : ""}</label>
+            <label class="js-lbl">ElevenLabs API key ${elSet ? '<span class="dim">(đã có - để trống nếu không đổi)</span>' : ""}</label>
             <input class="js-input" id="vpElKey" type="password" placeholder="dán API key ElevenLabs">
             <label class="js-lbl">Voice ID <span class="dim">(lấy ở ElevenLabs → Voices)</span></label>
             <input class="js-input" id="vpElVoice" value="${esc(v.elevenlabs_voice || "")}" placeholder="21m00Tcm4TlvDq8ikWAM (Rachel)">
@@ -1241,8 +1241,8 @@
       st.textContent = "Đang phát thử... (dùng cấu hình ĐÃ lưu)";
       const a = new Audio("/tts?text=" + encodeURIComponent("Xin chào, đây là giọng đọc mới của Jarvis.") + "&t=" + Date.now());
       a.onended = () => { st.textContent = "Nghe ổn chứ? Nếu chưa, đổi provider/giọng rồi Lưu lại."; };
-      a.onerror = () => { st.textContent = "⚠ Không phát được — kiểm tra API key / provider (Lưu trước khi thử)."; };
-      a.play().catch(() => { st.textContent = "⚠ Trình duyệt chặn phát — bấm ▶ lần nữa."; });
+      a.onerror = () => { st.textContent = "⚠ Không phát được - kiểm tra API key / provider (Lưu trước khi thử)."; };
+      a.play().catch(() => { st.textContent = "⚠ Trình duyệt chặn phát - bấm ▶ lần nữa."; });
     };
   }
 

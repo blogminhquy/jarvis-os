@@ -15,7 +15,7 @@ jarvis.service text eol=lf
 *.vbs       text eol=crlf
 *.ps1       text eol=crlf
 
-# Nhị phân — không đụng.
+# Nhị phân - không đụng.
 *.png binary
 *.jpg binary
 *.jpeg binary

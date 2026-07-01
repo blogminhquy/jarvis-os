@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Jarvis Voice — Test</title>
+  <title>Jarvis Voice - Test</title>
   <style>
     body {
       background: #0a0a0f; color: #e8e8f0;
@@ -39,24 +39,24 @@
   </style>
 </head>
 <body>
-  <h1>⬡ Jarvis Voice — Test Lab</h1>
+  <h1>⬡ Jarvis Voice - Test Lab</h1>
   <p style="color:#8888aa">Test STT + TTS không cần backend. Mở file này trong Chrome / Edge.</p>
 
   <div class="row">
-    <div class="label">STT — NHẬN DẠNG GIỌNG NÓI</div>
+    <div class="label">STT - NHẬN DẠNG GIỌNG NÓI</div>
     <button id="micBtn">🎤 Bấm để nói</button>
     <button id="stopBtn">⏹ Dừng</button>
     <div class="output">
-      <div id="finalText">—</div>
+      <div id="finalText">-</div>
       <div class="interim" id="interimText"></div>
     </div>
   </div>
 
   <div class="row">
-    <div class="label">TTS — GIỌNG ĐỌC (EDGE TTS BACKEND)</div>
-    <p style="font-size:12px;color:#22c55e;margin-bottom:10px">⬤ Dùng giọng Vietnamese từ Microsoft Edge — yêu cầu backend đang chạy ở localhost:7777</p>
+    <div class="label">TTS - GIỌNG ĐỌC (EDGE TTS BACKEND)</div>
+    <p style="font-size:12px;color:#22c55e;margin-bottom:10px">⬤ Dùng giọng Vietnamese từ Microsoft Edge - yêu cầu backend đang chạy ở localhost:7777</p>
     <select id="voiceSelect" style="margin-bottom:10px">
-      <option value="vi-VN-HoaiMyNeural">HoaiMy (nữ) — tự nhiên nhất</option>
+      <option value="vi-VN-HoaiMyNeural">HoaiMy (nữ) - tự nhiên nhất</option>
       <option value="vi-VN-NamMinhNeural">NamMinh (nam)</option>
     </select>
     <textarea id="ttsText">Xin chào, em là Jarvis, trợ lý AI của bạn. Em sẽ báo cáo kết quả kinh doanh và cuộc sống dựa trên các nguồn dữ liệu bạn kết nối. Hôm nay bạn muốn xem báo cáo gì?</textarea>
@@ -73,7 +73,7 @@
   </div>
 
   <div class="row">
-    <div class="label">PUSH-TO-TALK — GIỮ PHÍM CÁCH</div>
+    <div class="label">PUSH-TO-TALK - GIỮ PHÍM CÁCH</div>
     <p style="font-size:13px;color:#8888aa">Giữ phím <kbd style="background:#1a1a24;padding:2px 8px;border-radius:3px;border:1px solid #2a2a3a">Space</kbd> để nói liên tục (khi text input không focus).</p>
   </div>
 
@@ -108,7 +108,7 @@
     const speakBrowserBtn = document.getElementById("speakBrowserBtn");
     let currentAudio = null;
 
-    // Rate slider — update display + apply realtime nếu đang đọc
+    // Rate slider - update display + apply realtime nếu đang đọc
     const rateValEl = document.getElementById("rateVal");
     rate.oninput = () => {
       const r = parseFloat(rate.value);
@@ -145,7 +145,7 @@
         currentAudio.onerror = () => playGoogleTTS(text);
         await currentAudio.play().catch(() => playGoogleTTS(text));
       } else {
-        ttsStatus.textContent = "Backend không chạy — dùng Google Translate TTS";
+        ttsStatus.textContent = "Backend không chạy - dùng Google Translate TTS";
         playGoogleTTS(text);
       }
     };
@@ -160,7 +160,7 @@
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(chunk)}`;
         currentAudio = new Audio(url);
         applyRate(currentAudio);
-        currentAudio.onplay = () => ttsStatus.textContent = `▶ Google TTS — ${idx}/${chunks.length} — ${rate.value}×`;
+        currentAudio.onplay = () => ttsStatus.textContent = `▶ Google TTS - ${idx}/${chunks.length} - ${rate.value}×`;
         currentAudio.onended = playNext;
         currentAudio.onerror = () => ttsStatus.textContent = "✗ Lỗi: Trình duyệt chặn Google TTS.";
         currentAudio.play().catch(e => ttsStatus.textContent = "Lỗi: " + e.message);

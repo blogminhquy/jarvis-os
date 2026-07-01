@@ -23,14 +23,14 @@
         <button class="graph-folder-btn" id="newBrainBtn" title="Tạo brain mới trong thư mục brains">➕</button>
         <button class="graph-folder-btn" id="delBrainBtn" title="Xoá brain đang chọn (xác nhận gõ đúng tên)">🗑</button>
         <button class="graph-folder-btn" id="pickFolderBtn" title="Chọn brain từ folder ngoài bất kỳ">📁</button>
-        <span class="graph-stats" id="graphStats">—</span>
+        <span class="graph-stats" id="graphStats">-</span>
       </div>
       <div class="hud-center-title">
         <span class="ws-name" id="workspaceName">Jarvis OS</span>
         <span class="ws-date" id="currentDate"></span>
       </div>
       <div class="hud-actions">
-        <button class="studio-open-btn" id="studioOpenBtn" title="Studio — Agents, Skills, Workflows">▦ Studio</button>
+        <button class="studio-open-btn" id="studioOpenBtn" title="Studio - Agents, Skills, Workflows">▦ Studio</button>
         <button class="hud-icon-btn" id="settingsBtn" title="Cài đặt">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
@@ -78,25 +78,25 @@
         </div>
         <div class="graph-tooltip" id="graphTooltip"></div>
 
-        <!-- Lớp Agentic: số agent / skill / workflow — bấm mở Studio -->
+        <!-- Lớp Agentic: số agent / skill / workflow - bấm mở Studio -->
         <div class="brain-stats" id="brainStats">
           <button class="bstat" data-tab="agents" title="Mở Studio · Agents">
-            <span class="bstat-num" id="statAgents">—</span>
+            <span class="bstat-num" id="statAgents">-</span>
             <span class="bstat-lbl">AGENTS</span>
           </button>
           <span class="bstat-sep"></span>
           <button class="bstat" data-tab="skills" title="Mở Studio · Skills">
-            <span class="bstat-num" id="statSkills">—</span>
+            <span class="bstat-num" id="statSkills">-</span>
             <span class="bstat-lbl">SKILLS</span>
           </button>
           <span class="bstat-sep"></span>
           <button class="bstat" data-tab="workflows" title="Mở Studio · Workflows">
-            <span class="bstat-num" id="statWorkflows">—</span>
+            <span class="bstat-num" id="statWorkflows">-</span>
             <span class="bstat-lbl">WORKFLOWS</span>
           </button>
           <span class="bstat-sep"></span>
           <button class="bstat" data-tab="automations" title="Mở Studio · Lịch tự động (routines đang chạy)">
-            <span class="bstat-num" id="statRoutines">—</span>
+            <span class="bstat-num" id="statRoutines">-</span>
             <span class="bstat-lbl">ROUTINES</span>
           </button>
         </div>
@@ -107,7 +107,7 @@
         <div class="panel-label">
           <span>HỘI THOẠI</span>
           <span style="display:flex;align-items:center;gap:6px">
-            <span class="engine-badge" id="engineBadge" title="Engine + model THẬT đang chạy (lấy từ server — không phải tên model tự nhận)">—</span>
+            <span class="engine-badge" id="engineBadge" title="Engine + model THẬT đang chạy (lấy từ server - không phải tên model tự nhận)">-</span>
             <button class="mini-btn" id="chatZoomBtn" title="Phóng to khung chat (Esc để thu nhỏ)">⛶</button>
           </span>
         </div>
@@ -120,7 +120,7 @@
           BỘ NHỚ DÀI HẠN <span class="mem-count" id="memCount">0</span>
         </div>
         <div class="mem-box">
-          <div class="mem-desc">Ký ức lưu ngay trong vault đang chọn — đổi máy chỉ cần trỏ lại vault là Jarvis nhớ như cũ.</div>
+          <div class="mem-desc">Ký ức lưu ngay trong vault đang chọn - đổi máy chỉ cần trỏ lại vault là Jarvis nhớ như cũ.</div>
           <label class="auto-learn">
             <input type="checkbox" id="autoLearnToggle" checked>
             <span>Tự học sau mỗi 6 lượt</span>
@@ -135,7 +135,7 @@
           VÒNG LẶP TỰ CẢI THIỆN <span class="beta-tag">BETA</span>
         </div>
         <div class="loop-box" style="display:none">
-          <div class="loop-desc">Jarvis tự đánh thức theo lịch, tìm đòn bẩy cải thiện rồi tự kiểm chứng. An toàn: chỉ soạn nháp/ghi file trong vault — KHÔNG tự gọi MCP tạo đơn, đốt tiền, đăng bài.</div>
+          <div class="loop-desc">Jarvis tự đánh thức theo lịch, tìm đòn bẩy cải thiện rồi tự kiểm chứng. An toàn: chỉ soạn nháp/ghi file trong vault - KHÔNG tự gọi MCP tạo đơn, đốt tiền, đăng bài.</div>
           <label class="loop-row">
             <span>Bật tự chạy nền</span>
             <label class="toggle"><input type="checkbox" id="loopEnabled"><span></span></label>
@@ -294,7 +294,7 @@
     <div class="rail-top">
       <div class="rail-brand"><img src="/brand-logo" alt="Jarvis" style="width:30px;height:30px;border-radius:8px;display:block;object-fit:cover"></div>
     </div>
-    <!-- GIỮA cuộn được — nhồi bao nhiêu tính năng cũng cuộn -->
+    <!-- GIỮA cuộn được - nhồi bao nhiêu tính năng cũng cuộn -->
     <div class="rail-nav">
       <template x-for="it in $store.nav.items" :key="it.id">
         <button class="rail-item" :class="{ active: $store.nav.active === it.id }"
@@ -356,7 +356,7 @@
         <span>📁 Chọn brain (folder chứa ghi chú .md)</span>
         <button class="fm-close" id="fmClose">✕</button>
       </div>
-      <div class="fm-path" id="fmPath">—</div>
+      <div class="fm-path" id="fmPath">-</div>
       <div class="fm-list" id="fmList"></div>
       <div class="fm-foot">
         <span class="fm-hint" id="fmHint"></span>
@@ -389,14 +389,14 @@
         </div>
         <div class="set-sec">
           <h4>2. Tài khoản admin <span class="dim">(khuyến nghị)</span></h4>
-          <div class="set-note">Đặt mật khẩu để chặn người lạ — quan trọng nếu đưa lên VPS. Bỏ trống nếu chỉ chạy máy cá nhân.</div>
+          <div class="set-note">Đặt mật khẩu để chặn người lạ - quan trọng nếu đưa lên VPS. Bỏ trống nếu chỉ chạy máy cá nhân.</div>
           <label>Tài khoản</label><input id="wzUser" placeholder="admin">
           <label>Mật khẩu</label><input id="wzPass" type="password" placeholder="để trống = không đặt mật khẩu">
           <div id="wzTokenWrap" style="display:none">
             <label>Mã thiết lập <span class="dim">(bảo mật)</span></label>
             <input id="wzToken" placeholder="dán MÃ THIẾT LẬP từ log server">
             <div class="wz-tokhelp">
-              <b>❓ Mã thiết lập là gì?</b> Jarvis đang chạy trên server công khai. Để chắc <b>chính bạn</b> (không phải người lạ vô tình mở link) là người tạo tài khoản admin, bạn dán một mã chỉ in ra <b>log server</b> — nơi duy nhất chủ máy xem được.
+              <b>❓ Mã thiết lập là gì?</b> Jarvis đang chạy trên server công khai. Để chắc <b>chính bạn</b> (không phải người lạ vô tình mở link) là người tạo tài khoản admin, bạn dán một mã chỉ in ra <b>log server</b> - nơi duy nhất chủ máy xem được.
               <br><b>Cách lấy mã (Hostinger → App terminal):</b>
               <ol>
                 <li>Mở app → bấm <b>App terminal</b> (bạn sẽ vào BÊN TRONG container <code>jarvis</code>).</li>
@@ -425,7 +425,7 @@
             <label class="wz-card" data-prov="openrouter">
               <input type="radio" name="wzprov" value="openrouter">
               <div><b>🌐 OpenRouter</b>
-                <div class="wz-pdesc">Nhiều model giá rẻ (chat thuần, không MCP). Chỉ cần API key — không cần đăng nhập.</div></div>
+                <div class="wz-pdesc">Nhiều model giá rẻ (chat thuần, không MCP). Chỉ cần API key - không cần đăng nhập.</div></div>
             </label>
           </div>
           <div id="wzOrKey" style="display:none">
@@ -472,8 +472,8 @@
           <h4>Model</h4>
           <label>Engine xử lý chat</label>
           <select id="setEngine">
-            <option value="cli">Claude Code CLI — đầy đủ MCP / skill / loop</option>
-            <option value="openrouter">OpenRouter — chat thuần, KHÔNG có MCP</option>
+            <option value="cli">Claude Code CLI - đầy đủ MCP / skill / loop</option>
+            <option value="openrouter">OpenRouter - chat thuần, KHÔNG có MCP</option>
           </select>
           <label>Model Claude (khi dùng CLI)</label>
           <select id="setClaudeModel">
@@ -496,7 +496,7 @@
           <input id="setTgToken" type="password" placeholder="123456:ABC... (để trống nếu không đổi)">
           <label>Chat ID được phép dùng</label>
           <input id="setTgChat" placeholder="vd 123456789">
-          <div class="set-note" id="setTgStatus">—</div>
+          <div class="set-note" id="setTgStatus">-</div>
           <div class="set-note">Nhắn Telegram ↔ Jarvis. Dùng đúng engine đang chọn (CLI thì có cả MCP để hỏi doanh thu/ads qua điện thoại). Có thể dùng lại token bot Morning Briefing.</div>
           <div class="set-actions">
             <button class="s-btn" id="saveTelegram">Lưu & bật</button>

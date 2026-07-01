@@ -1,5 +1,5 @@
 // ============================================================
-// brains-ui.js — Nhiều second brain trong 1 thư mục (BRAINS_DIR), nạp TỪ SERVER.
+// brains-ui.js - Nhiều second brain trong 1 thư mục (BRAINS_DIR), nạp TỪ SERVER.
 // Bổ sung cho app.js, KHÔNG sửa app.js (file UTF-16 dễ hỏng). Chỉ thao tác DOM:
 //   - Đổ dropdown #graphSource từ GET /brains (thay vì localStorage).
 //   - Nút #newBrainBtn → POST /brains/new tạo brain mới.
@@ -77,14 +77,14 @@
       return;
     }
     const name = opt.dataset.brainName;
-    // Xác nhận KỸ: gõ đúng tên — vì đây là TOÀN BỘ tri thức trong não này, mất là không lấy lại được.
+    // Xác nhận KỸ: gõ đúng tên - vì đây là TOÀN BỘ tri thức trong não này, mất là không lấy lại được.
     const typed = window.prompt(
       "⚠️ XOÁ BRAIN \"" + name + "\"\n\n" +
       "Toàn bộ tri thức (sources, wiki, agents, workflows, bộ nhớ...) trong não này sẽ bị XOÁ VĨNH VIỄN, KHÔNG khôi phục được.\n\n" +
       "Gõ CHÍNH XÁC tên brain để xác nhận:"
     );
     if (typed === null) return;
-    if (typed.trim() !== name) { alert("Tên không khớp — đã huỷ xoá."); return; }
+    if (typed.trim() !== name) { alert("Tên không khớp - đã huỷ xoá."); return; }
     const fd = new FormData();
     fd.append("name", name);
     fd.append("confirm", typed.trim());

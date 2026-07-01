@@ -1,5 +1,5 @@
 """
-Cấu hình tập trung của Jarvis OS — đọc/ghi server/settings.json (gitignored, chứa secret).
+Cấu hình tập trung của Jarvis OS - đọc/ghi server/settings.json (gitignored, chứa secret).
 Gồm: workspace, tài khoản admin (mật khẩu hash), model engine, telegram.
 Auth CHỈ bật khi đã đặt mật khẩu → bản local chưa đặt vẫn chạy như cũ.
 """
@@ -19,7 +19,7 @@ except Exception:
     pass
 
 SETTINGS_PATH = STATE_DIR / "settings.json"
-# Logo/avatar tùy chỉnh (đổi qua UI) lưu ở đây — ghi được + giữ qua update (Docker volume),
+# Logo/avatar tùy chỉnh (đổi qua UI) lưu ở đây - ghi được + giữ qua update (Docker volume),
 # vì code tree dashboard/ là read-only trong container.
 BRANDING_DIR = STATE_DIR / "branding"
 
@@ -38,14 +38,14 @@ _DEFAULT = {
         "openai_tts_voice": "alloy",                  # alloy|echo|fable|onyx|nova|shimmer|ash|sage|coral
         "openai_tts_model": "gpt-4o-mini-tts",        # hoặc tts-1 / tts-1-hd
         "elevenlabs_key": "",
-        "elevenlabs_voice": "21m00Tcm4TlvDq8ikWAM",   # Rachel (premade, đa ngôn ngữ) — đổi được
+        "elevenlabs_voice": "21m00Tcm4TlvDq8ikWAM",   # Rachel (premade, đa ngôn ngữ) - đổi được
         "elevenlabs_model": "eleven_multilingual_v2",
     },
     "model": {
         # --- Mô hình MAIN MODEL theo provider (mới) ---
         # Rỗng = suy ra từ legacy engine (config cũ không vỡ); UI set vào đây khi user đổi model.
         "main": {"provider": "", "model": ""},
-        # Model phụ cho việc NỀN (loop/metrics/ingest) — alias Claude qua CLI. "" = dùng mặc định
+        # Model phụ cho việc NỀN (loop/metrics/ingest) - alias Claude qua CLI. "" = dùng mặc định
         # (không đổi). Đặt model rẻ (vd haiku) để tiết kiệm khi chạy nền nhiều.
         "auxiliary": {"model": ""},
         # Độ sâu suy nghĩ (reasoning/thinking) khi trả lời chat: off | low | medium | high.
@@ -56,7 +56,7 @@ _DEFAULT = {
         "openrouter_key": "",
         "anthropic_api_key": "",               # provider Anthropic API (P2)
         "openai_api_key": "",                  # provider OpenAI (ChatGPT API)
-        # Provider 'openai-oauth' — đăng nhập ChatGPT Plus/Pro qua device-code (xem openai_oauth.py).
+        # Provider 'openai-oauth' - đăng nhập ChatGPT Plus/Pro qua device-code (xem openai_oauth.py).
         "openai_oauth": {"access_token": "", "refresh_token": "", "id_token": "", "account_id": "", "plan": "", "expires_at": 0},
         # --- Legacy: giữ đồng bộ với main để engine cũ không vỡ (engine/claude_model/openrouter_model) ---
         "engine": "cli",                       # cli (Claude Code, đủ MCP) | openrouter | anthropic-api
@@ -67,7 +67,7 @@ _DEFAULT = {
             "claude": ["opus", "sonnet", "haiku", "fable"],                       # anthropic-cli (alias)
             "anthropic-api": ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
             "openai": ["gpt-4o", "gpt-4o-mini", "o3-mini"],                        # OpenAI API
-            "openai-oauth": ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex"],  # ChatGPT OAuth (Codex; chỉ fallback — picker load động)
+            "openai-oauth": ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex"],  # ChatGPT OAuth (Codex; chỉ fallback - picker load động)
             "openrouter": ["openai/gpt-4o-mini", "anthropic/claude-3.5-sonnet", "google/gemini-2.0-flash-001", "deepseek/deepseek-chat"],
         },
     },
@@ -117,7 +117,7 @@ def auth_enabled(cfg=None):
 def require_login():
     """Có BẮT BUỘC đăng nhập để dùng Javis không (kể cả khi CHƯA đặt mật khẩu → ép setup).
     - JARVIS_REQUIRE_LOGIN=1/0 ép bật/tắt tường minh.
-    - Mặc định: BẬT khi server nghe public (JARVIS_HOST=0.0.0.0, vd Docker/Hostinger/VPS) —
+    - Mặc định: BẬT khi server nghe public (JARVIS_HOST=0.0.0.0, vd Docker/Hostinger/VPS) -
       vì Claude chạy full quyền, không được để hở ai cũng vào được."""
     v = os.getenv("JARVIS_REQUIRE_LOGIN", "").strip().lower()
     if v in ("1", "true", "yes", "on"):
@@ -202,7 +202,7 @@ def clear_sessions():
 
 
 # ---- Setup token: chống CHIẾM ADMIN lần đầu trên public ----
-# Khi chạy public mà CHƯA có admin, /auth/setup PHẢI kèm token này — token chỉ in ra LOG server
+# Khi chạy public mà CHƯA có admin, /auth/setup PHẢI kèm token này - token chỉ in ra LOG server
 # lúc khởi động, nên chỉ chính chủ (xem được log/terminal) tạo được tài khoản. Kẻ chỉ-có-URL bó tay.
 _SETUP_TOKEN_PATH = STATE_DIR / ".setup_token"
 

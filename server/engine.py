@@ -1,6 +1,6 @@
 """
-Lớp engine cho CHAT. Mặc định dùng Claude Code CLI (đầy đủ MCP/skill — ở claude_cli.py).
-Đây là backend phụ: OpenRouter — chat THUẦN (không MCP/skill), khi user chọn engine=openrouter.
+Lớp engine cho CHAT. Mặc định dùng Claude Code CLI (đầy đủ MCP/skill - ở claude_cli.py).
+Đây là backend phụ: OpenRouter - chat THUẦN (không MCP/skill), khi user chọn engine=openrouter.
 Stream token-by-token; trả các event {"type":"text"|"error","content":...} giống ClaudeCLI.query.
 """
 import asyncio
@@ -11,7 +11,7 @@ import threading
 import time
 import httpx
 
-# Lone surrogate (U+D800–U+DFFF) sanitizer — port từ hermes-agent/agent/message_sanitization.py.
+# Lone surrogate (U+D800–U+DFFF) sanitizer - port từ hermes-agent/agent/message_sanitization.py.
 # Model open-weight (qwen/deepseek/minimax/glm…) thi thoảng stream ra lone surrogate trong content.
 # Ký tự này KHÔNG hợp lệ UTF-8: (1) ghi conversations/*.md (open encoding utf-8) ném UnicodeEncodeError
 # → mất log học; (2) resend history → httpx ensure_ascii escape thành \udXXX gửi sang provider → có nơi
@@ -43,7 +43,7 @@ def _jittered_backoff(attempt: int, base: float = 1.0, max_delay: float = 8.0, j
 _RETRY_STATUS = {408, 429, 502, 503, 504, 529}   # 529 = Anthropic/OpenRouter "Overloaded" (transient)
 _RETRY_EXC = (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.ConnectError, httpx.RemoteProtocolError)
 
-# Cụm từ trong BODY báo lỗi tạm thời — bắt ca provider trả overload/rate-limit dưới status KHÔNG retriable
+# Cụm từ trong BODY báo lỗi tạm thời - bắt ca provider trả overload/rate-limit dưới status KHÔNG retriable
 # (vd 400/402/200-with-error). Hẹp & nghiêng "overload/throttle" để 400 sai-format thật KHÔNG khớp.
 _TRANSIENT_BODY_PATTERNS = (
     "overloaded", "at capacity", "over capacity", "temporarily unavailable",
@@ -96,7 +96,7 @@ def _parse_retry_after(headers, cap: float = 600.0):
 
 class _RetryStream(Exception):
     """Sentinel để thoát các async with lồng nhau và quay lại vòng retry.
-    retry_after: giây provider yêu cầu chờ (từ header Retry-After) — None thì dùng jittered backoff."""
+    retry_after: giây provider yêu cầu chờ (từ header Retry-After) - None thì dùng jittered backoff."""
     def __init__(self, retry_after=None):
         super().__init__()
         self.retry_after = retry_after
@@ -106,7 +106,7 @@ def _apply_anthropic_cache(payload: dict, cache_ttl: str = "5m") -> None:
     """Áp prompt caching 'system_and_3' cho Anthropic Messages API: đánh cache_control
     trên system prompt + 3 message cuối → cache read 0.1x cost (giảm ~75% input token)
     cho multi-turn. Anthropic ignore an toàn nếu prompt < min token (1024 Sonnet/Opus,
-    2048 Haiku) — không lỗi. Port từ Hermes agent/prompt_caching.py."""
+    2048 Haiku) - không lỗi. Port từ Hermes agent/prompt_caching.py."""
     marker: dict = {"type": "ephemeral"}
     if cache_ttl == "1h":
         marker["ttl"] = "1h"
@@ -223,7 +223,7 @@ def _openai_is_reasoning(model):
 
 
 async def openai_stream(api_key, model, messages, reasoning="off"):
-    """OpenAI Chat Completions (provider 'openai') — chat thuần, định dạng giống OpenRouter."""
+    """OpenAI Chat Completions (provider 'openai') - chat thuần, định dạng giống OpenRouter."""
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {"model": model or "gpt-4o-mini", "messages": messages, "stream": True}
     if reasoning not in (None, "", "off") and _openai_is_reasoning(model):
@@ -259,7 +259,7 @@ async def openai_stream(api_key, model, messages, reasoning="off"):
 
 
 async def anthropic_stream(api_key, model, messages, reasoning="off"):
-    """Anthropic Messages API (provider 'anthropic-api') — chat THUẦN, không MCP/skill.
+    """Anthropic Messages API (provider 'anthropic-api') - chat THUẦN, không MCP/skill.
     Tách system ra field riêng (Anthropic không nhận role=system trong messages)."""
     sys_parts = [m.get("content", "") for m in messages if m.get("role") == "system"]
     conv = [{"role": m["role"], "content": m.get("content", "")}
@@ -330,7 +330,7 @@ async def openrouter_stream(api_key, model, messages, reasoning="off"):
     payload = {"model": model or "openai/gpt-4o-mini", "messages": messages, "stream": True}
     if reasoning not in (None, "", "off"):
         payload["reasoning"] = {"effort": reasoning}   # OpenRouter chuẩn hoá effort cho mọi model reasoning
-    # Jittered retry — CHỈ cho transient (429/5xx hoặc network exception) và CHỈ khi chưa yield text.
+    # Jittered retry - CHỈ cho transient (429/5xx hoặc network exception) và CHỈ khi chưa yield text.
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         got_content = False
@@ -386,7 +386,7 @@ async def openrouter_stream(api_key, model, messages, reasoning="off"):
                     if not got_content:
                         if reasoning.strip():
                             yield {"type": "text", "content": _sanitize_surrogates(reasoning.strip())}
-                            got_content = True   # reasoning đã là nội dung — vẫn cần báo truncation phía dưới
+                            got_content = True   # reasoning đã là nội dung - vẫn cần báo truncation phía dưới
                         else:
                             yield {"type": "error", "content": f"Model trả về rỗng (finish_reason={finish}). Thử lại hoặc đổi sang model khác trong Cài đặt."}
                             return
@@ -399,7 +399,7 @@ async def openrouter_stream(api_key, model, messages, reasoning="off"):
                         yield {"type": "text", "content": "\n\n" + notes.get(finish, f"⚠️ Stream kết thúc bất thường (finish_reason={finish}).")}
                     return  # success → thoát vòng retry
         except _RetryStream as rs:
-            # Honor Retry-After provider gửi (429/503) — chính xác hơn đoán mò; thiếu thì jittered backoff
+            # Honor Retry-After provider gửi (429/503) - chính xác hơn đoán mò; thiếu thì jittered backoff
             await asyncio.sleep(rs.retry_after if rs.retry_after is not None else _jittered_backoff(attempt))
             continue
         except _RETRY_EXC as e:
@@ -413,7 +413,7 @@ async def openrouter_stream(api_key, model, messages, reasoning="off"):
             return
 
 
-# ChatGPT OAuth (provider 'openai-oauth') — gọi backend Codex bằng token subscription.
+# ChatGPT OAuth (provider 'openai-oauth') - gọi backend Codex bằng token subscription.
 CODEX_RESPONSES_URL = "https://chatgpt.com/backend-api/codex/responses"
 
 
@@ -432,7 +432,7 @@ def _codex_input(messages):
 
 
 async def openai_responses_stream(access_token, account_id, model, messages, reasoning="off"):
-    """Chat qua gói ChatGPT (OAuth) — backend Codex Responses API. Model: gpt-5-codex / gpt-5."""
+    """Chat qua gói ChatGPT (OAuth) - backend Codex Responses API. Model: gpt-5-codex / gpt-5."""
     if not access_token:
         yield {"type": "error", "content": "Chưa đăng nhập ChatGPT (OAuth). Vào Models để kết nối."}
         return
@@ -495,7 +495,7 @@ async def openai_responses_stream(access_token, account_id, model, messages, rea
 
 
 # ============================================================
-# MCP đa-model — vòng tool-calling để model API/OAuth dùng MCP của Jarvis (qua mcp_client)
+# MCP đa-model - vòng tool-calling để model API/OAuth dùng MCP của Jarvis (qua mcp_client)
 # ============================================================
 def _clip_tool_result(result, max_chars: int = 8000, head_ratio: float = 0.6) -> str:
     """Cắt kết quả tool quá dài kiểu head+tail KÈM marker, thay cho hard-cut `[:max]`.
@@ -510,7 +510,7 @@ def _clip_tool_result(result, max_chars: int = 8000, head_ratio: float = 0.6) ->
     tail_n = max_chars - head_n
     omitted = len(text) - head_n - tail_n
     return (text[:head_n]
-            + f"\n\n… [KẾT QUẢ TOOL BỊ CẮT — bỏ {omitted:,} ký tự giữa / tổng {len(text):,}] …\n\n"
+            + f"\n\n… [KẾT QUẢ TOOL BỊ CẮT - bỏ {omitted:,} ký tự giữa / tổng {len(text):,}] …\n\n"
             + text[-tail_n:])
 
 

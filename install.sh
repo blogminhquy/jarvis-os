@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Jarvis OS — Linux/macOS native installer (no Docker)
+# Jarvis OS - Linux/macOS native installer (no Docker)
 #   ./install.sh
 # Installs python3 + node + Claude Code CLI, creates a venv, installs deps,
 # seeds .env, and registers a systemd service (or falls back to nohup).
@@ -80,7 +80,7 @@ log "Creating virtualenv (.venv)..."
 ./.venv/bin/pip install -r requirements.txt -q
 ok "Python deps installed"
 
-# --- 6. .env (chmod 600 — holds tokens) ---
+# --- 6. .env (chmod 600 - holds tokens) ---
 if [ ! -f .env ]; then cp .env.example .env; chmod 600 .env; ok "Created .env from template"; else chmod 600 .env 2>/dev/null || true; ok ".env exists"; fi
 
 # --- 7. minimal config prompt ---
@@ -131,7 +131,7 @@ UNIT
   $SUDO systemctl enable --now jarvis.service
   ok "Service installed. Logs: journalctl -u jarvis -f"
 else
-  warn "systemd not available — starting under nohup..."
+  warn "systemd not available - starting under nohup..."
   ( cd "$APP_DIR/server" && JARVIS_STATE_DIR="$APP_DIR/server" nohup "$PY" -m uvicorn main:app --host 127.0.0.1 --port 7777 > "$APP_DIR/server/jarvis.log" 2>&1 & )
   ok "Started. Logs: $APP_DIR/server/jarvis.log"
 fi
@@ -140,7 +140,7 @@ echo ""
 ok "Jarvis OS is up at: http://127.0.0.1:7777"
 log "Remote access (SSH tunnel): ssh -L 7777:localhost:7777 $(whoami)@<vps-ip>"
 echo ""
-log "Truy cập từ xa qua Cloudflare Tunnel (không cần mở port, có HTTPS — như Hermes):"
+log "Truy cập từ xa qua Cloudflare Tunnel (không cần mở port, có HTTPS - như Hermes):"
 echo "    1) Đặt MẬT KHẨU trong Dashboard → Tài khoản TRƯỚC (Claude chạy full quyền!)."
 if command -v cloudflared >/dev/null 2>&1; then
   echo "    2) cloudflared tunnel --url http://localhost:7777   → mở URL https://<random>.trycloudflare.com"

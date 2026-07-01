@@ -1,5 +1,5 @@
 """
-MCP client (Streamable HTTP, JSON-RPC 2.0) — để các bộ não API/OAuth (OpenRouter / OpenAI /
+MCP client (Streamable HTTP, JSON-RPC 2.0) - để các bộ não API/OAuth (OpenRouter / OpenAI /
 ChatGPT) cũng DÙNG ĐƯỢC MCP của Jarvis. Jarvis tự làm MCP client: initialize → tools/list →
 tools/call, rồi engine chạy vòng tool-calling với model.
 

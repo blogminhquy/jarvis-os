@@ -1,6 +1,6 @@
 """
-Graph builder — quét các file markdown, parse [[wikilink]], dựng đồ thị kết nối.
-Đây là lớp "Graphify" — visualize mạng lưới note như Obsidian graph view.
+Graph builder - quét các file markdown, parse [[wikilink]], dựng đồ thị kết nối.
+Đây là lớp "Graphify" - visualize mạng lưới note như Obsidian graph view.
 """
 import os
 import re
@@ -11,7 +11,7 @@ from typing import List, Dict
 # Match [[Note]] và [[folder/Note|alias]]
 WIKILINK_RE = re.compile(r"\[\[([^\]\|#]+)(?:[#\|][^\]]*)?\]\]")
 
-# Palette tinh vân tím (như V.A.U.L.T) — tím chủ đạo + vài tông phụ, lõi trắng nóng
+# Palette tinh vân tím (như V.A.U.L.T) - tím chủ đạo + vài tông phụ, lõi trắng nóng
 FOLDER_COLORS = {
     "00": "#c77dff", "01": "#a96bff", "02": "#7c5cff", "03": "#d98cff",
     "04": "#8a9bff", "05": "#e07ad1", "06": "#b07aff", "07": "#9b8cff",
@@ -104,7 +104,7 @@ def build_graph(roots: List[str], max_files: int = 2000) -> Dict:
     node_list = [n for nid, n in nodes.items() if nid in keep]
     edge_list = [e for e in unique_edges if e["source"] in keep and e["target"] in keep]
 
-    # Đếm concept theo nhóm (folder cha trực tiếp của file) — cho nhãn HUD
+    # Đếm concept theo nhóm (folder cha trực tiếp của file) - cho nhãn HUD
     from collections import Counter
     cat_counter = Counter()
     for n in node_list:

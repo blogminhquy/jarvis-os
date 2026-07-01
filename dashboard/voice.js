@@ -1,5 +1,5 @@
 // ============================================
-// JARVIS OS — Voice Layer (Web Speech API)
+// JARVIS OS - Voice Layer (Web Speech API)
 // ============================================
 
 class JarvisVoice {
@@ -27,7 +27,7 @@ class JarvisVoice {
     this.speechQueue = [];   // hàng đợi đọc nối tiếp (các bước trung gian + kết quả)
     this.isPlaying = false;
 
-    // Audio analysis — cho hiệu ứng phát sáng theo âm thanh
+    // Audio analysis - cho hiệu ứng phát sáng theo âm thanh
     this.audioCtx = null;
     this.outAnalyser = null;   // âm Jarvis đọc (TTS)
     this.inAnalyser = null;    // âm mic (khi nghe)
@@ -118,14 +118,14 @@ class JarvisVoice {
       const display = (this.accumulatedTranscript + interim).trim();
       if (display) {
         this.onInterim(display);
-        // Reset đồng hồ im lặng — nói tiếp thì hoãn, im đủ lâu thì tự gửi
+        // Reset đồng hồ im lặng - nói tiếp thì hoãn, im đủ lâu thì tự gửi
         clearTimeout(this._silenceTimer);
         this._silenceTimer = setTimeout(() => this.stopListening(), this.silenceMs);
       }
     };
 
     this.recognition.onerror = (event) => {
-      // 'no-speech' không phải lỗi thật — auto-restart
+      // 'no-speech' không phải lỗi thật - auto-restart
       if (event.error === "no-speech" || event.error === "aborted") {
         return;
       }
@@ -140,7 +140,7 @@ class JarvisVoice {
           this.recognition.start();
           return;
         } catch (e) {
-          // start fail (đã đang chạy) — ignore
+          // start fail (đã đang chạy) - ignore
         }
       }
       this.isListening = false;
@@ -247,7 +247,7 @@ class JarvisVoice {
   }
 
   async _speakBackend(text) {
-    // KHÔNG stopSpeaking ở đây — hàng đợi (_pumpQueue) điều phối thứ tự đọc.
+    // KHÔNG stopSpeaking ở đây - hàng đợi (_pumpQueue) điều phối thứ tự đọc.
     // Đoạn to (đa số câu trả lời = 1 đoạn → đọc liền 1 mạch, không khoảng trống)
     this.ttsChunks = this._splitIntoChunks(text, 600);
     this._preloaded = null;

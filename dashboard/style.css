@@ -118,7 +118,7 @@ body {
 #starfield { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
 #graph3dContainer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; cursor: grab; }
 #graph3dContainer canvas { display: block; background: transparent !important; }
-/* Vignette tối góc — chiều sâu kiểu HUD */
+/* Vignette tối góc - chiều sâu kiểu HUD */
 .hud-center::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
   background: radial-gradient(ellipse 70% 70% at 50% 46%, transparent 45%, rgba(3,3,10,0.55) 100%);
@@ -172,7 +172,7 @@ body {
 }
 .graph-folder-btn:hover { border-color: var(--accent); }
 
-/* Lớp Agentic — dải số liệu agent/skill/workflow ở đáy graph */
+/* Lớp Agentic - dải số liệu agent/skill/workflow ở đáy graph */
 .brain-stats {
   position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
   z-index: 5; display: flex; align-items: stretch;
@@ -233,10 +233,10 @@ body {
 }
 .loop-log-item .lli-time { color: var(--accent); font-family: var(--font); font-size: 12px; }
 
-/* Studio — tab Lịch tự động */
+/* Studio - tab Lịch tự động */
 .auto-hint { font-size: 13px; color: var(--text3); line-height: 1.5; margin: 4px 0 12px; }
 
-/* Loop — ô mục tiêu tự định nghĩa */
+/* Loop - ô mục tiêu tự định nghĩa */
 .loop-custom {
   width: 100%; background: rgba(20,20,30,0.8); border: 1px solid var(--border); color: var(--text);
   border-radius: 7px; padding: 7px 9px; font-size: 14px; resize: vertical; min-height: 48px; font-family: inherit;
@@ -291,14 +291,14 @@ body {
   font-family: ui-monospace, monospace; color: #d6c9ff;
 }
 
-/* Run drawer — trạng thái kiểm chứng */
+/* Run drawer - trạng thái kiểm chứng */
 .rs-verify { font-size: 13px; color: var(--text3); margin-left: 6px; }
 .rs-verify.ok { color: var(--green); }
 .rs-verify.fail { color: var(--red); }
 .rs-retry { font-size: 13px; color: var(--yellow); margin: 4px 0; }
 .rs-warn { font-size: 13px; color: var(--red); margin-top: 4px; }
 
-/* Editor — cấu hình kiểm chứng cho bước workflow (styles moved to step-row section) */
+/* Editor - cấu hình kiểm chứng cho bước workflow (styles moved to step-row section) */
 
 /* Folder picker modal */
 .modal-overlay {
@@ -432,7 +432,7 @@ body {
   box-shadow: 0 0 0 4px rgba(239,68,68,0.15); animation: micpulse 1.2s ease-in-out infinite;
 }
 @keyframes micpulse { 50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
-/* Hands-free: luôn nghe — vòng cam cố định */
+/* Hands-free: luôn nghe - vòng cam cố định */
 .mic-big.handsfree {
   border-color: var(--accent); color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255,107,43,0.25), 0 0 18px rgba(255,107,43,0.35);
@@ -730,7 +730,7 @@ body {
 .quick-set-body .s-btn, .quick-set-body .s-btn-ghost, .quick-set-body .test-btn { width: 100%; }
 .quick-set .set-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 
-/* ===== CHAT PHÓNG TO — nổi mờ trên brain đang chuyển động ===== */
+/* ===== CHAT PHÓNG TO - nổi mờ trên brain đang chuyển động ===== */
 .chat-stage {
   position: fixed; left: 50%; top: 60px; transform: translateX(-50%);
   width: min(920px, 78vw); height: calc(100vh - 84px); max-height: 92vh;

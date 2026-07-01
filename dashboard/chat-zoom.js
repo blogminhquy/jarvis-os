@@ -1,4 +1,4 @@
-/* chat-zoom.js — phóng to khung chat thành LỚP NỔI mờ đè lên brain (brain vẫn tự xoay phía sau).
+/* chat-zoom.js - phóng to khung chat thành LỚP NỔI mờ đè lên brain (brain vẫn tự xoay phía sau).
    Di chuyển CHÍNH node #chatArea + #hudVoice vào lớp nổi (giữ nguyên mọi handler đã gắn),
    Esc hoặc nút ✕ để thu nhỏ. Tách riêng để không đụng app.js. */
 (function () {

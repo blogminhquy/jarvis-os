@@ -1,4 +1,4 @@
-/* quick-settings.js — công tắc BẬT/TẮT đọc trả lời bằng giọng (nhớ qua reload) trong sidebar.
+/* quick-settings.js - công tắc BẬT/TẮT đọc trả lời bằng giọng (nhớ qua reload) trong sidebar.
    Đồng bộ 2 chiều với nút loa ở header (#ttsToggle). Tách riêng để không đụng app.js. */
 (function () {
   "use strict";

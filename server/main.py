@@ -1,5 +1,5 @@
 """
-Jarvis OS — Backend
+Jarvis OS - Backend
 Kiến trúc: Voice (browser) ⇄ FastAPI WebSocket ⇄ Claude Code CLI subprocess
 
 Jarvis KHÔNG gọi Anthropic API trực tiếp. Mọi reasoning + tool calling đi qua
@@ -36,7 +36,7 @@ from sessions import get_store   # kho phiên hội thoại (sqlite + fts5): lis
 app = FastAPI(title="Jarvis OS")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) —
+# Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
 _AUTH_PUBLIC_PREFIX = ("/static", "/health")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
@@ -63,9 +63,9 @@ app.mount("/static", StaticFiles(directory=str(DASHBOARD_PATH)), name="static")
 CLAUDE_MD_PATH = Path(__file__).parent.parent / "CLAUDE.md"
 SYSTEM_PROMPT = CLAUDE_MD_PATH.read_text(encoding="utf-8") if CLAUDE_MD_PATH.exists() else None
 
-# Bộ nhớ dài hạn — lưu TRONG vault đang chọn để đi theo vault
+# Bộ nhớ dài hạn - lưu TRONG vault đang chọn để đi theo vault
 MEMORY_SEED = (
-    "# Bộ nhớ Jarvis — Index\n\n"
+    "# Bộ nhớ Jarvis - Index\n\n"
     "> Chỉ mục bộ nhớ dài hạn của Jarvis. Mỗi dòng = 1 ký ức, trỏ tới file trong `facts/`.\n"
     "> Nội dung file này được nạp vào đầu mỗi câu hỏi để Jarvis nhớ ngữ cảnh.\n\n"
     "_(Chưa có ký ức nào. Jarvis sẽ học dần sau mỗi hội thoại.)_\n"
@@ -77,7 +77,7 @@ def _atomic_write_text(path, content: str, encoding: str = "utf-8"):
     Mặc định write_text() ghi trực tiếp; nếu Jarvis crash hoặc mất điện
     giữa chừng, file (loop_config.json, automations.json, memory .md...)
     sẽ bị cắt cụt → JSON corrupt / frontmatter hỏng. Pattern port từ
-    hermes-agent/utils.py:atomic_replace — bảo đảm reader luôn thấy bản
+    hermes-agent/utils.py:atomic_replace - bảo đảm reader luôn thấy bản
     cũ hoặc bản mới hoàn chỉnh, không bao giờ thấy bản dở dang.
     """
     p = Path(path)
@@ -147,7 +147,7 @@ def build_system_prompt(brain: str = "brain") -> str:
     )
     return base
 
-# Redaction patterns — port subset từ hermes-agent/agent/redact.py.
+# Redaction patterns - port subset từ hermes-agent/agent/redact.py.
 # Bảo vệ log_conversation() khỏi việc ghi vĩnh viễn API key / Telegram bot token /
 # JWT vào brain/Memory/conversations/*.md khi user vô tình paste vào chat
 # (file này thường bị commit lên git → leak vĩnh viễn).
@@ -182,7 +182,7 @@ def _redact_secrets(text: str) -> str:
     """Mask API key / Telegram token / JWT / DB password trước khi ghi log.
 
     Cheap substring pre-check trước mỗi regex để không phí cycle trên dòng
-    text bình thường (pattern Hermes — ~3x faster trên log thông thường).
+    text bình thường (pattern Hermes - ~3x faster trên log thông thường).
     """
     if not text or not isinstance(text, str):
         return text
@@ -205,7 +205,7 @@ def _redact_secrets(text: str) -> str:
         text = _DB_CONN_RE.sub(lambda m: f"{m.group(1)}***{m.group(3)}", text)
     return text
 
-# Cap kích thước mỗi message khi ghi conversation log — port head/tail truncation
+# Cap kích thước mỗi message khi ghi conversation log - port head/tail truncation
 # từ hermes-agent/agent/prompt_builder.py::_truncate_content. conversations/*.md là
 # "nguyên liệu để học" (rewire đọc lại) VÀ bị git commit; user paste 1 source dài
 # hoặc Jarvis trả báo cáo dài → log phình, rewire tốn token, repo nặng. Giữ đầu +
@@ -219,7 +219,7 @@ def _clip_for_log(text: str, max_chars: int = _LOG_MSG_MAX_CHARS) -> str:
         return text
     head, tail = text[:_LOG_HEAD_CHARS], text[-_LOG_TAIL_CHARS:]
     omitted = len(text) - _LOG_HEAD_CHARS - _LOG_TAIL_CHARS
-    marker = (f"\n\n[… cắt {omitted} ký tự giữa — giữ {_LOG_HEAD_CHARS} đầu + "
+    marker = (f"\n\n[… cắt {omitted} ký tự giữa - giữ {_LOG_HEAD_CHARS} đầu + "
               f"{_LOG_TAIL_CHARS} cuối / tổng {len(text)} …]\n\n")
     return head + marker + tail
 
@@ -238,14 +238,14 @@ def log_conversation(brain: str, user_msg: str, jarvis_msg: str):
     except Exception as e:
         print(f"[memory log error] {e}", file=__import__('sys').stderr)
 
-# Working directory cho Claude CLI — mặc định là root project Jarvis OS
+# Working directory cho Claude CLI - mặc định là root project Jarvis OS
 # để Claude đọc được CLAUDE.md và truy cập MCPs cài globally
 CLAUDE_CWD = os.getenv("CLAUDE_CWD", str(Path(__file__).parent.parent))
 
-# Second Brain — gộp folder brain/ trong project + vault chính
+# Second Brain - gộp folder brain/ trong project + vault chính
 PROJECT_ROOT = Path(__file__).parent.parent
-BRAIN_PATH = os.getenv("BRAIN_PATH", str(PROJECT_ROOT / "brain"))   # LEGACY (brain đơn cũ) — chỉ dùng để migrate
-# Thư mục CHA chứa MỌI brain — mỗi folder con = 1 second brain. Docker = /brains (mount riêng,
+BRAIN_PATH = os.getenv("BRAIN_PATH", str(PROJECT_ROOT / "brain"))   # LEGACY (brain đơn cũ) - chỉ dùng để migrate
+# Thư mục CHA chứa MỌI brain - mỗi folder con = 1 second brain. Docker = /brains (mount riêng,
 # git-backup được, KHÔNG nằm trong /data state). Local = <project>/brains. Brain mặc định =
 # <BRAINS_DIR>/Brain Default. KHÔNG hardcode: cấu hình qua env, chọn brain bất kỳ qua path:.
 BRAINS_DIR = os.getenv("BRAINS_DIR", str(PROJECT_ROOT / "brains"))
@@ -277,7 +277,7 @@ async def stop():
 
 
 # ============================================================
-# Auth — 1 tài khoản admin (đặt lần đầu để chặn người lạ khi lên VPS)
+# Auth - 1 tài khoản admin (đặt lần đầu để chặn người lạ khi lên VPS)
 # ============================================================
 def _session_cookie(resp, token, request=None):
     # KHÔNG tự suy Secure từ X-Forwarded-Proto: nhiều proxy (vd Hostinger port-path http://host/PORT/)
@@ -319,10 +319,10 @@ async def auth_setup(request: Request, username: str = Form(...), password: str 
                      setup_token: str = Form("")):
     cfg = cfgmod.read_settings()
     if cfgmod.auth_enabled(cfg):
-        return JSONResponse({"ok": False, "error": "Đã có tài khoản — hãy đăng nhập."}, status_code=400)
+        return JSONResponse({"ok": False, "error": "Đã có tài khoản - hãy đăng nhập."}, status_code=400)
     # PUBLIC: chống kẻ chỉ-có-URL chiếm admin lần đầu → bắt buộc MÃ THIẾT LẬP (in trong log server).
     if cfgmod.setup_token_required() and not cfgmod.check_setup_token(setup_token):
-        return JSONResponse({"ok": False, "error": "Sai hoặc thiếu MÃ THIẾT LẬP — xem mã trong log/terminal của server."}, status_code=403)
+        return JSONResponse({"ok": False, "error": "Sai hoặc thiếu MÃ THIẾT LẬP - xem mã trong log/terminal của server."}, status_code=403)
     if len(password) < 8:
         return JSONResponse({"ok": False, "error": "Mật khẩu tối thiểu 8 ký tự"}, status_code=400)
     h, salt = cfgmod.hash_password(password)
@@ -332,7 +332,7 @@ async def auth_setup(request: Request, username: str = Form(...), password: str 
     return _session_cookie(JSONResponse({"ok": True}), cfgmod.new_session(), request)
 
 
-# Rate-limit đăng nhập (chống brute-force) — đếm theo IP, khoá tạm sau N lần sai.
+# Rate-limit đăng nhập (chống brute-force) - đếm theo IP, khoá tạm sau N lần sai.
 _LOGIN_FAILS = {}        # ip -> [fail_count, locked_until_ts]
 _LOGIN_MAX_FAILS = 8
 _LOGIN_LOCK_SEC = 300
@@ -356,7 +356,7 @@ def _login_fail(ip):
 async def auth_login(request: Request, username: str = Form(...), password: str = Form(...)):
     ip = request.client.host if request.client else "?"
     if _login_locked(ip):
-        return JSONResponse({"ok": False, "error": "Quá nhiều lần sai — thử lại sau ít phút."}, status_code=429)
+        return JSONResponse({"ok": False, "error": "Quá nhiều lần sai - thử lại sau ít phút."}, status_code=429)
     cfg = cfgmod.read_settings()
     if not cfgmod.auth_enabled(cfg):
         return {"ok": True, "note": "auth chưa bật"}
@@ -378,7 +378,7 @@ async def auth_logout(request: Request):
 
 @app.post("/auth/disable")
 async def auth_disable():
-    """Tắt yêu cầu đăng nhập (xóa mật khẩu) — chỉ gọi được khi ĐANG đăng nhập (middleware chặn)."""
+    """Tắt yêu cầu đăng nhập (xóa mật khẩu) - chỉ gọi được khi ĐANG đăng nhập (middleware chặn)."""
     cfg = cfgmod.read_settings()
     cfg["auth"] = {"username": "", "password_hash": "", "salt": ""}
     cfgmod.write_settings(cfg)
@@ -387,7 +387,7 @@ async def auth_disable():
 
 
 # ============================================================
-# Providers — nhà cung cấp model. kind=cli (qua Claude Code, đủ MCP) | api (gọi thẳng, chat thuần)
+# Providers - nhà cung cấp model. kind=cli (qua Claude Code, đủ MCP) | api (gọi thẳng, chat thuần)
 # ============================================================
 PROVIDER_DEFS = [   # thứ tự = thứ tự hiển thị card ở trang Models
     {"id": "anthropic-cli", "label": "Anthropic OAuth (Claude Code)", "kind": "cli", "key_field": None,          "catalog_key": "claude",
@@ -466,7 +466,7 @@ def _aux_model():
     return (cfgmod.read_settings().get("model", {}).get("auxiliary") or {}).get("model") or ""
 
 def _chat_provider(mcfg):
-    """Provider dùng cho chat (id, kind, key, model) — từ model chính hiệu lực."""
+    """Provider dùng cho chat (id, kind, key, model) - từ model chính hiệu lực."""
     em = _effective_main({"model": mcfg})
     prov, model = em["provider"], em["model"]
     d = _provider_def(prov) or {}
@@ -491,7 +491,7 @@ def _api_stream(prov, key, model, messages, reasoning="off"):
 # Cửa sổ lịch sử chat cho engine API (openrouter/openai/anthropic-api). Mỗi lượt
 # resend TOÀN BỘ history → phiên dài phình vô hạn (cost tăng + nguy cơ vượt context /
 # bị API từ chối body quá to). Port rút gọn từ hermes trajectory_compressor: giữ
-# system turn đầu + N message gần nhất, bỏ phần giữa. Count-based — không cần tokenizer.
+# system turn đầu + N message gần nhất, bỏ phần giữa. Count-based - không cần tokenizer.
 _MAX_HISTORY_MSGS = 12   # ≈6 lượt hỏi-đáp gần nhất (ngoài system message)
 
 
@@ -542,7 +542,7 @@ def _cli_think(reasoning, message):
     kw = _CLI_THINK_KW.get(reasoning)
     if not kw:
         return message
-    return f"{message}\n\n(Suy nghĩ kỹ trước khi trả lời — {kw})"
+    return f"{message}\n\n(Suy nghĩ kỹ trước khi trả lời - {kw})"
 
 
 def _toml_str(s):
@@ -594,14 +594,14 @@ def _apply_mcp(cli):
 
 
 # ============================================================
-# Settings — đọc/ghi cấu hình (secret bị che khi đọc)
+# Settings - đọc/ghi cấu hình (secret bị che khi đọc)
 # ============================================================
 @app.get("/providers")
 async def providers_get():
     return {"providers": _providers_view(cfgmod.read_settings())}
 
 
-# ---- ChatGPT OAuth (device-code) — đăng nhập gói ChatGPT thay API key ----
+# ---- ChatGPT OAuth (device-code) - đăng nhập gói ChatGPT thay API key ----
 @app.post("/oauth/openai/start")
 def oauth_openai_start():
     try:
@@ -630,7 +630,7 @@ def oauth_openai_status():
     return openai_oauth.status()
 
 
-# ---- Claude Code auth (provider anthropic-cli) — connect/disconnect như OAuth ----
+# ---- Claude Code auth (provider anthropic-cli) - connect/disconnect như OAuth ----
 @app.get("/claude/status")
 def claude_status():
     return claude_auth_status()
@@ -713,7 +713,7 @@ async def mcp_strict(request: Request):
 
 @app.get("/mcp/ambient")
 def mcp_ambient():
-    """MCP sẵn trong Claude Code (đồng bộ claude.ai) — chỉ hiển thị."""
+    """MCP sẵn trong Claude Code (đồng bộ claude.ai) - chỉ hiển thị."""
     return {"servers": mcp_native_list()}
 
 
@@ -774,7 +774,7 @@ async def settings_set(section: str = Form(...), data: str = Form("{}")):
             prov = patch["main"].get("provider"); mod = patch["main"].get("model")
             if _provider_def(prov) and mod:
                 _set_main_model(cfg, prov, mod)
-        # Nhập credential provider (chỉ ghi khi có giá trị mới — tránh xoá bằng giá trị che ••••)
+        # Nhập credential provider (chỉ ghi khi có giá trị mới - tránh xoá bằng giá trị che ••••)
         for kf in ("openrouter_key", "anthropic_api_key", "openai_api_key"):
             if patch.get(kf):
                 m[kf] = patch[kf]
@@ -860,7 +860,7 @@ async def openrouter_models():
         return {"models": [], "error": f"{type(e).__name__}: {e}"}
 
 
-# Model load ĐỘNG theo provider (không hardcode — provider đổi model không cần sửa code).
+# Model load ĐỘNG theo provider (không hardcode - provider đổi model không cần sửa code).
 _PROV_MODELS_CACHE = {}   # provider -> {"ids":[...], "ts": float}
 
 
@@ -985,7 +985,7 @@ async def health():
     }
 
 
-# Cache số liệu trong RAM — tránh gọi Claude mỗi lần F5 (tốn phí + chậm)
+# Cache số liệu trong RAM - tránh gọi Claude mỗi lần F5 (tốn phí + chậm)
 _METRICS_CACHE = {"data": None, "ts": 0.0}
 _METRICS_TTL = float(os.getenv("METRICS_TTL", "180"))   # giây
 
@@ -993,7 +993,7 @@ _METRICS_TTL = float(os.getenv("METRICS_TTL", "180"))   # giây
 @app.get("/metrics")
 async def metrics(fresh: int = Query(0, description="1 = bỏ cache, gọi mới")):
     """
-    Số liệu động — Jarvis tự phát hiện MCP đang kết nối và trả về các card
+    Số liệu động - Jarvis tự phát hiện MCP đang kết nối và trả về các card
     phù hợp (kinh doanh và/hoặc cuộc sống). Không hardcode ngành nào.
     Có cache TTL: F5 liên tục không gọi lại Claude.
     """
@@ -1005,14 +1005,14 @@ async def metrics(fresh: int = Query(0, description="1 = bỏ cache, gọi mới
 
     cli = ClaudeCLI(system_prompt=SYSTEM_PROMPT, cwd=CLAUDE_CWD, tag="metrics")
     cli.model = _aux_model() or None   # việc nền: dùng model phụ nếu có cấu hình
-    _apply_mcp(cli)   # metrics cần MCP (POS/ads) — dùng server Jarvis quản lý nếu có
+    _apply_mcp(cli)   # metrics cần MCP (POS/ads) - dùng server Jarvis quản lý nếu có
     if not cli.is_available():
         return {"error": "Claude CLI chưa cài", "cards": []}
 
     prompt = (
         "Bạn đang tạo các thẻ SỐ LIỆU KINH DOANH cho dashboard. Xem các MCP/tool đang kết nối, "
-        "chọn nguồn theo THỨ TỰ ƯU TIÊN dưới đây — lấy nguồn ĐẦU TIÊN có dữ liệu:\n"
-        "1) Pancake POS (tool tên dạng pos_*): báo cáo BÁN HÀNG — doanh thu, số đơn, khách hàng... "
+        "chọn nguồn theo THỨ TỰ ƯU TIÊN dưới đây - lấy nguồn ĐẦU TIÊN có dữ liệu:\n"
+        "1) Pancake POS (tool tên dạng pos_*): báo cáo BÁN HÀNG - doanh thu, số đơn, khách hàng... "
         "kỳ hiện tại + so kỳ trước.\n"
         "2) Nếu KHÔNG có POS → KÊNH bán / mạng xã hội (Facebook page, Instagram, YouTube, fanpage, TikTok...): "
         "tương tác, follower, tin nhắn, đơn/lead từ kênh...\n"
@@ -1062,12 +1062,12 @@ async def graph(
     source: str = Query("all", description="all | brain | vault"),
     path: str = Query(None, description="Đường dẫn folder tùy ý (ưu tiên nếu có)"),
 ):
-    """Lớp Graphify — dựng đồ thị kết nối note từ wikilink."""
+    """Lớp Graphify - dựng đồ thị kết nối note từ wikilink."""
     return build_graph(_resolve_graph_roots(source, path))
 
 
 # ============================================================
-# Realtime graph — theo dõi file .md mới/đổi → đẩy node mọc lên live
+# Realtime graph - theo dõi file .md mới/đổi → đẩy node mọc lên live
 # ============================================================
 def _scan_md_mtimes(roots):
     """Quét .md trong các root → dict {fullpath: mtime}. Bỏ qua thư mục ẩn (.git, .obsidian...)."""
@@ -1182,7 +1182,7 @@ STAGING = PROJECT_ROOT / ".staging"
 def _default_brain_dir() -> Path:
     """Brain mặc định = <BRAINS_DIR>/Brain Default. BRAINS_DIR = thư mục CHA chứa mọi brain
     (mỗi folder con = 1 brain). Docker = /brains (mount riêng, ghi được, git-backup được).
-    Local = <project>/brains. Đây là 'bộ não khởi đầu' — user vẫn chọn brain khác trong danh
+    Local = <project>/brains. Đây là 'bộ não khởi đầu' - user vẫn chọn brain khác trong danh
     sách hoặc folder ngoài bất kỳ qua 'path:<thư mục>'. KHÔNG hardcode vault cá nhân nào."""
     p = Path(BRAINS_DIR) / "Brain Default"
     try:
@@ -1226,7 +1226,7 @@ def _resolve_subfolder(root: str, name_regex: str, default_name: str) -> str:
     return dest
 
 async def _save_upload_stream(upload: UploadFile, dest: str, chunk: int = 1024 * 1024):
-    """Ghi file upload xuống đĩa theo từng chunk 1MB — KHÔNG nạp cả file vào RAM và nhường
+    """Ghi file upload xuống đĩa theo từng chunk 1MB - KHÔNG nạp cả file vào RAM và nhường
     event-loop giữa các chunk. Tránh worker treo khi file lớn → reverse proxy (Caddy/Hostinger)
     reset kết nối, khiến client thấy 'lỗi mạng'."""
     with open(dest, "wb") as f:
@@ -1309,10 +1309,10 @@ async def ingest_upload(
                 "folder": os.path.basename(sources)}
     return {"ok": False, "error": "Không tạo được .md", "raw": final[:200]}
 
-# Cấu trúc chuẩn Jarvis — kiểm tra khi mở vault
+# Cấu trúc chuẩn Jarvis - kiểm tra khi mở vault
 # detect: regex khớp tên folder top-level (linh hoạt "06 - Sources" / "Sources")
 STANDARD_STRUCTURE = [
-    # Nội dung người dùng đưa vào — nguồn lưu trữ (source of truth)
+    # Nội dung người dùng đưa vào - nguồn lưu trữ (source of truth)
     {"key": "sources", "label": "sources", "kind": "dir", "detect": r"^(\d+\s*[-_.]\s*)?sources$", "create": "sources", "essential": True},
     # Lớp vận hành Jarvis (alt = vị trí cũ chưa migrate → không báo thiếu nhầm)
     {"key": "agents", "label": "agents", "kind": "dir", "detect": r"^agents$", "alt": "Jarvis/agents", "create": "agents", "essential": True},
@@ -1320,7 +1320,7 @@ STANDARD_STRUCTURE = [
     {"key": "memory", "label": "memory", "kind": "dir", "detect": r"^memory$", "alt": "Memory", "create": "memory", "essential": True},
     # Skill KHÔNG phải folder top-level: sống ở .claude/skills/<skill>/SKILL.md (Claude Code native),
     # chia nhóm bằng field `group` trong frontmatter. Nên không liệt kê ở đây.
-    # Tuỳ chọn — Jarvis chưng cất source → wiki (nuôi graph); đính kèm ảnh/file
+    # Tuỳ chọn - Jarvis chưng cất source → wiki (nuôi graph); đính kèm ảnh/file
     {"key": "wiki", "label": "wiki", "kind": "dir", "detect": r"^(\d+\s*[-_.]\s*)?wiki$", "create": "wiki", "essential": False},
     {"key": "attachments", "label": "attachments", "kind": "dir", "detect": r"^(\d+\s*[-_.]\s*)?attachments$", "create": "attachments", "essential": False},
 ]
@@ -1355,17 +1355,17 @@ def _check_structure(root: Path):
 
 JARVIS_README = (
     "# Jarvis\n\nLớp điều phối của Jarvis OS trong vault này.\n\n"
-    "- `agents/` — các Agent (vai trò + skills + bộ nhớ riêng)\n"
-    "- `workflows/` — quy trình nhiều agent (status active/off)\n"
+    "- `agents/` - các Agent (vai trò + skills + bộ nhớ riêng)\n"
+    "- `workflows/` - quy trình nhiều agent (status active/off)\n"
     "- Skills dùng chung ở `.claude/skills/`\n"
 )
 SCHEMA_SEED = (
-    "# AGENTS.md — Vault Schema (Jarvis)\n\n"
+    "# AGENTS.md - Vault Schema (Jarvis)\n\n"
     "> Vault này hoạt động với Jarvis OS. Cấu trúc:\n\n"
-    "- `06 - Sources/` — ghi chú thô (source of truth)\n"
-    "- `07 - Wiki/` — tri thức đã chưng cất, có `[[wikilink]]`\n"
-    "- `Memory/` — bộ nhớ dài hạn của Jarvis (facts + conversations)\n"
-    "- `Jarvis/` — agents + workflows\n\n"
+    "- `06 - Sources/` - ghi chú thô (source of truth)\n"
+    "- `07 - Wiki/` - tri thức đã chưng cất, có `[[wikilink]]`\n"
+    "- `Memory/` - bộ nhớ dài hạn của Jarvis (facts + conversations)\n"
+    "- `Jarvis/` - agents + workflows\n\n"
     "Nguyên lý: Sources → (ingest) → Wiki. Tri thức tích luỹ, không tái phát hiện.\n"
 )
 
@@ -1485,7 +1485,7 @@ async def brain_migrate(brain: str = Form("brain")):
     for old_rel, new_rel in [("Jarvis/agents", "agents"), ("Jarvis/workflows", "workflows"), ("Memory", "memory")]:
         src, dst = root / old_rel, root / new_rel
         if dst.exists():
-            skipped.append(f"{new_rel} (đã tồn tại — bỏ qua)")
+            skipped.append(f"{new_rel} (đã tồn tại - bỏ qua)")
             continue
         if src.is_dir():
             try:
@@ -1547,7 +1547,7 @@ async def new_brain(name: str = Form(...)):
 
 @app.post("/brains/delete")
 async def delete_brain(name: str = Form(...), confirm: str = Form("")):
-    """Xoá HẲN 1 brain (cả thư mục) — toàn bộ tri thức trong não đó. Yêu cầu confirm == name (gõ tay).
+    """Xoá HẲN 1 brain (cả thư mục) - toàn bộ tri thức trong não đó. Yêu cầu confirm == name (gõ tay).
     CHẶN xoá brain mặc định + chỉ xoá folder NẰM TRONG BRAINS_DIR (không đụng folder ngoài)."""
     safe = _safe_brain_name(name)
     if not safe:
@@ -1569,7 +1569,7 @@ async def delete_brain(name: str = Form(...), confirm: str = Form("")):
     return {"ok": True, "name": safe}
 
 # ============================================================
-# STUDIO — Agents / Skills / Workflows
+# STUDIO - Agents / Skills / Workflows
 # ============================================================
 def _slugify(s: str) -> str:
     s = (s or "").strip().lower()
@@ -1578,7 +1578,7 @@ def _slugify(s: str) -> str:
     return s[:60] or "item"
 
 def _ascii_slug(s: str) -> str:
-    """Slug KHÔNG DẤU (a-z0-9-) — dùng cho tên thư mục skill (Claude Code nạp bền hơn ASCII)."""
+    """Slug KHÔNG DẤU (a-z0-9-) - dùng cho tên thư mục skill (Claude Code nạp bền hơn ASCII)."""
     import unicodedata
     s = (s or "").replace("đ", "d").replace("Đ", "D")
     s = unicodedata.normalize("NFD", s)
@@ -1778,7 +1778,7 @@ async def skill_set_group(slug: str = Form(...), group: str = Form(...), brain: 
 
 
 # ============================================================
-# Quản lý File (File Manager) — duyệt / đọc / sửa / tải / xoá file TRONG brain đang chọn.
+# Quản lý File (File Manager) - duyệt / đọc / sửa / tải / xoá file TRONG brain đang chọn.
 # An toàn: mọi thao tác bị giới hạn trong _brain_root(brain) (chống traversal ../).
 # ============================================================
 _TEXT_EXTS = {".md", ".txt", ".json", ".yaml", ".yml", ".csv", ".js", ".ts", ".py",
@@ -1830,11 +1830,11 @@ async def files_read(brain: str = Query("brain"), path: str = Query(...)):
     if not f.is_file():
         return JSONResponse({"error": "Không tìm thấy file"}, status_code=404)
     if f.stat().st_size > 2_000_000:
-        return JSONResponse({"error": "File quá lớn để xem (>2MB) — hãy tải về"}, status_code=413)
+        return JSONResponse({"error": "File quá lớn để xem (>2MB) - hãy tải về"}, status_code=413)
     try:
         text = f.read_text(encoding="utf-8")
     except Exception:
-        return JSONResponse({"error": "File nhị phân — không xem được dạng văn bản"}, status_code=415)
+        return JSONResponse({"error": "File nhị phân - không xem được dạng văn bản"}, status_code=415)
     return {"path": path, "name": f.name, "content": text,
             "editable": f.suffix.lower() in _TEXT_EXTS, "ext": f.suffix.lower()}
 
@@ -2055,7 +2055,7 @@ async def run_workflow(slug: str = Query(...), brain: str = Query("brain"), inpu
                 attempt += 1
                 yield sse({"type": "step_retry", "i": i, "attempt": attempt})
                 cur_prompt = (
-                    f"{task_f}\n\n# KẾT QUẢ LẦN TRƯỚC CHƯA ĐẠT — sửa lại theo phản hồi kiểm chứng:\n"
+                    f"{task_f}\n\n# KẾT QUẢ LẦN TRƯỚC CHƯA ĐẠT - sửa lại theo phản hồi kiểm chứng:\n"
                     f"- Vấn đề: {reason}\n- Cần sửa: {fixes}\n"
                     f"Làm lại cho ĐẠT."
                 )
@@ -2077,7 +2077,7 @@ async def studio_seed(brain: str = Form("brain")):
          "skills": ["deep-research"], "prompt": "Bạn tìm 5-7 nguồn chất lượng, trích dẫn rõ ràng, tổng hợp insight chính."},
         {"name": "Writer", "role": "Chuyên viết bài chuẩn SEO và hấp dẫn từ tư liệu nghiên cứu.",
          "skills": ["salepage-16-buoc"], "prompt": "Bạn viết bài có cấu trúc, hook mạnh, dùng tư liệu được cung cấp."},
-        {"name": "Kiểm chứng viên", "role": "Đánh giá độc lập — luôn giả định kết quả SAI và phải chứng minh.",
+        {"name": "Kiểm chứng viên", "role": "Đánh giá độc lập - luôn giả định kết quả SAI và phải chứng minh.",
          "skills": [], "prompt": "Bạn KHÔNG tạo nội dung, chỉ ĐÁNH GIÁ. Mặc định kết quả đang sai/thiếu. "
                                  "Kiểm tra thực tế: có bám nhiệm vụ không, có bịa/thiếu dẫn chứng không, có lỗi rõ ràng không. "
                                  "Khắt khe nhưng công bằng."},
@@ -2099,7 +2099,7 @@ async def studio_seed(brain: str = Form("brain")):
 
 
 # ============================================================
-# LOOP TỰ CẢI THIỆN (Beta) — Discovery + Scheduling, an toàn (chỉ thao tác file vault)
+# LOOP TỰ CẢI THIỆN (Beta) - Discovery + Scheduling, an toàn (chỉ thao tác file vault)
 # ============================================================
 # An toàn: loop CHỈ được dùng các tool file dưới đây → không thể gọi MCP tạo đơn/đốt tiền.
 SAFE_FILE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "LS"]
@@ -2140,13 +2140,13 @@ async def run_loop_cycle(reason="manual"):
 
 @app.get("/lint")
 async def lint(brain: str = Query("brain")):
-    """LINT — health-check Wiki (chỉ đọc, không sửa). Trả danh sách 8 loại vấn đề."""
+    """LINT - health-check Wiki (chỉ đọc, không sửa). Trả danh sách 8 loại vấn đề."""
     cli = ClaudeCLI(system_prompt=SYSTEM_PROMPT, cwd=_brain_root(brain), tag="lint",
                     allowed_tools=READONLY_TOOLS)
     if not cli.is_available():
         return {"ok": False, "error": "Claude CLI chưa cài"}
     prompt = (
-        "LINT — quét folder Wiki của vault, tìm 8 loại vấn đề: mâu thuẫn, stale claim, orphan page, "
+        "LINT - quét folder Wiki của vault, tìm 8 loại vấn đề: mâu thuẫn, stale claim, orphan page, "
         "missing page, broken wikilink, trùng lặp, gap (vùng kiến thức mỏng), open-question chưa lấp.\n"
         "CHỈ liệt kê DANH SÁCH CHECK ngắn gọn theo nhóm (không tự sửa). Mỗi mục 1 dòng. Tiếng Việt. "
         "Nếu Wiki sạch thì nói rõ."
@@ -2161,7 +2161,7 @@ async def lint(brain: str = Query("brain")):
 
 
 # ============================================================
-# Automations registry (Hướng 1) — lịch tự động: cron / trigger / routine
+# Automations registry (Hướng 1) - lịch tự động: cron / trigger / routine
 # Backend KHÔNG query được CronList/RemoteTrigger của Claude Code → ta lưu file registry
 # trong vault (Jarvis/automations.json) + chèn sẵn "Vòng lặp tự cải thiện" (loop nội bộ).
 # ============================================================
@@ -2372,7 +2372,7 @@ async def browse(path: str = Query("", description="Thư mục cần liệt kê;
                 continue
             full = os.path.join(path, name)
             if os.path.isdir(full):
-                # Đếm nhanh số .md (kể cả thư mục con) — giới hạn để nhẹ
+                # Đếm nhanh số .md (kể cả thư mục con) - giới hạn để nhẹ
                 try:
                     md = len(_glob.glob(f"{full}/**/*.md", recursive=True)[:500])
                 except Exception:
@@ -2438,7 +2438,7 @@ def _ver_newer(latest, cur) -> bool:
 
 
 def _deploy_mode() -> str:
-    """docker | windows | native — quyết định cách cập nhật."""
+    """docker | windows | native - quyết định cách cập nhật."""
     if os.path.exists("/.dockerenv") or os.getenv("JARVIS_STATE_DIR", "").startswith("/data"):
         return "docker"
     if os.name == "nt":
@@ -2505,7 +2505,7 @@ async def do_update():
         t.add_done_callback(_UPDATE_TASKS.discard)
         return {"ok": True, "mode": "docker", "message": "Đang kéo image mới + khởi động lại (~20-40s)."}
 
-    # native / windows — chỉ tự cập nhật được nếu là git checkout
+    # native / windows - chỉ tự cập nhật được nếu là git checkout
     root = str(PROJECT_ROOT)
     if not _is_git_checkout(root):
         return JSONResponse({"ok": False,
@@ -2515,7 +2515,7 @@ async def do_update():
         import subprocess
         logf = str(cfgmod.STATE_DIR / "update.log")
         if mode == "windows":
-            # Updater TÁCH RỜI (DETACHED): git pull ghi log rồi relaunch — không chết theo process này.
+            # Updater TÁCH RỜI (DETACHED): git pull ghi log rồi relaunch - không chết theo process này.
             bat = str(cfgmod.STATE_DIR / "_selfupdate.bat")
             with open(bat, "w", encoding="utf-8") as f:
                 f.write("@echo off\r\n")
@@ -2534,7 +2534,7 @@ async def do_update():
 
 
 # ============================================
-# Branding — logo/avatar đổi được qua UI (lưu ở STATE_DIR/branding, giữ qua update).
+# Branding - logo/avatar đổi được qua UI (lưu ở STATE_DIR/branding, giữ qua update).
 # Trong Docker code tree read-only → KHÔNG ghi đè dashboard/logo.png; lưu ở volume state.
 # ============================================
 _LOGO_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
@@ -2689,7 +2689,7 @@ async def domain_status(request: Request):
 
 
 # ============================================
-# TTS — Edge TTS (giọng Vietnamese chuẩn, miễn phí)
+# TTS - Edge TTS (giọng Vietnamese chuẩn, miễn phí)
 # ============================================
 def _rate_to_speed(rate: str) -> float:
     """'+10%' / '-20%' → tốc độ 1.1 / 0.8 cho OpenAI (kẹp 0.25..4.0)."""
@@ -2764,7 +2764,7 @@ async def tts(
         else:
             audio = await _tts_edge(text, voice, rate)
     except Exception as e:
-        print(f"[TTS {provider}] {type(e).__name__}: {e} — thử fallback Edge", file=sys.stderr)
+        print(f"[TTS {provider}] {type(e).__name__}: {e} - thử fallback Edge", file=sys.stderr)
         if provider != "edge":
             try:
                 audio = await _tts_edge(text, voice, rate)
@@ -2789,7 +2789,7 @@ async def tts_voices():
 
 
 # ============================================
-# WebSocket — Voice chat với Claude Code
+# WebSocket - Voice chat với Claude Code
 # ============================================
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
@@ -2859,13 +2859,13 @@ async def websocket_endpoint(ws: WebSocket):
 
             final_text = ""
             if prov == "openai-oauth":
-                # ===== ChatGPT subscription qua CODEX CLI — MCP/tool NATIVE (như Hermes, dùng codex của máy) =====
+                # ===== ChatGPT subscription qua CODEX CLI - MCP/tool NATIVE (như Hermes, dùng codex của máy) =====
                 actual_model = api_model or "gpt-5.5"
                 openai_oauth.write_codex_auth()   # bắc cầu token đã nối ở Models → ~/.codex/auth.json (codex dùng được)
                 ccli = CodexCLI(cwd=CLAUDE_CWD, model=actual_model, tag="chat")
                 ccli.profile = _write_codex_profile()   # đẩy MCP của Jarvis (POSCake...) sang codex
                 if not ccli.is_available():
-                    await ws.send_text(json.dumps({"type": "error", "content": "Chưa cài Codex CLI trong container. ChatGPT subscription là THỬ NGHIỆM — dùng Claude Code hoặc OpenRouter cho ổn định (đổi ở Models)."}))
+                    await ws.send_text(json.dumps({"type": "error", "content": "Chưa cài Codex CLI trong container. ChatGPT subscription là THỬ NGHIỆM - dùng Claude Code hoặc OpenRouter cho ổn định (đổi ở Models)."}))
                 else:
                     async for ev in ccli.query(_cli_think(reasoning, user_message)):
                         et = ev["type"]
@@ -2880,12 +2880,12 @@ async def websocket_endpoint(ws: WebSocket):
                             await ws.send_text(json.dumps({"type": "error", "content": ev["content"]}))
                     await ws.send_text(json.dumps({"type": "response", "content": final_text, "engine": "codex", "model": actual_model, "session_id": conv_sid}))
             elif (kind == "api" and api_key) or kind == "oauth":
-                # ===== PROVIDER API/OAuth (openrouter | openai | anthropic-api) — chat thuần (MCP đa-model cho openrouter/openai) =====
+                # ===== PROVIDER API/OAuth (openrouter | openai | anthropic-api) - chat thuần (MCP đa-model cho openrouter/openai) =====
                 label = _api_label(prov)
                 actual_model = api_model or "?"
                 if or_messages is None:
                     _ident = (
-                        f"\n\n[Sự thật hệ thống — TUÂN THỦ tuyệt đối: Bạn đang chạy qua {label}, "
+                        f"\n\n[Sự thật hệ thống - TUÂN THỦ tuyệt đối: Bạn đang chạy qua {label}, "
                         f"model thực tế là '{actual_model}'. Khi được hỏi bạn là AI/model nào, "
                         f"trả lời ĐÚNG tên model này. KHÔNG được tự nhận là model khác.]"
                     )
@@ -2915,7 +2915,7 @@ async def websocket_endpoint(ws: WebSocket):
                 or_messages = _trim_history(or_messages)   # bound history → payload không phình vô hạn
                 await ws.send_text(json.dumps({"type": "response", "content": final_text, "engine": prov, "model": actual_model, "session_id": conv_sid}))
             else:
-                # ===== PROVIDER anthropic-cli — qua Claude Code, đầy đủ MCP / skill / session =====
+                # ===== PROVIDER anthropic-cli - qua Claude Code, đầy đủ MCP / skill / session =====
                 cli.system_prompt = sysprompt
                 cli.model = api_model or mcfg.get("claude_model") or None   # alias opus/sonnet/haiku/fable
                 _apply_mcp(cli)   # gắn MCP do Jarvis quản lý (nhiều shop POSCake...)
@@ -2946,7 +2946,7 @@ async def websocket_endpoint(ws: WebSocket):
 
 
 # ============================================================
-# Phiên hội thoại — list / view / search / rename / delete (sqlite + fts5)
+# Phiên hội thoại - list / view / search / rename / delete (sqlite + fts5)
 # /sessions/search KHAI BÁO TRƯỚC /sessions/{id} để không bị nuốt làm path param.
 # ============================================================
 @app.get("/sessions")
@@ -2982,7 +2982,7 @@ async def sessions_delete(session_id: str):
 
 
 # ============================================================
-# Telegram bot — nhắn Telegram ↔ Jarvis (dùng engine theo Settings; CLI thì có cả MCP)
+# Telegram bot - nhắn Telegram ↔ Jarvis (dùng engine theo Settings; CLI thì có cả MCP)
 # ============================================================
 _TG_BOT = None
 _tg_cli = None
@@ -3033,15 +3033,15 @@ async def _tg_help_text(brain):
     return (
         "🤖 Jarvis Telegram\n\n"
         "Lệnh:\n"
-        "/status — engine, model, vault, trạng thái\n"
-        "/skills — liệt kê skill\n"
-        "/agents — liệt kê agent + việc đang chạy\n"
-        "/workflows — liệt kê workflow\n"
-        "/model — xem/đổi model (opus|sonnet|haiku|fable|<claude-id> hoặc <provider/id> cho OpenRouter)\n"
-        "/cli — engine Claude (có MCP/skill)\n"
-        "/or — engine OpenRouter (chat thuần)\n"
-        "/retry — gửi lại câu gần nhất\n"
-        "/reset — hội thoại mới · /stop — dừng\n\n"
+        "/status - engine, model, vault, trạng thái\n"
+        "/skills - liệt kê skill\n"
+        "/agents - liệt kê agent + việc đang chạy\n"
+        "/workflows - liệt kê workflow\n"
+        "/model - xem/đổi model (opus|sonnet|haiku|fable|<claude-id> hoặc <provider/id> cho OpenRouter)\n"
+        "/cli - engine Claude (có MCP/skill)\n"
+        "/or - engine OpenRouter (chat thuần)\n"
+        "/retry - gửi lại câu gần nhất\n"
+        "/reset - hội thoại mới · /stop - dừng\n\n"
         "Gửi tin thường để hỏi Jarvis. Gõ /tên-skill để gọi skill (cần engine Claude CLI)."
     )
 
@@ -3054,7 +3054,7 @@ async def _tg_skills_text(brain):
         sk = []
     if not sk:
         return "Vault chưa có skill nào trong .claude/skills."
-    lines = [f"/{s['slug']} — {(s.get('description') or '')[:60]}" for s in sk[:30]]
+    lines = [f"/{s['slug']} - {(s.get('description') or '')[:60]}" for s in sk[:30]]
     return "🧩 Skill có sẵn (gõ /slug để gọi, cần engine Claude CLI):\n" + "\n".join(lines)
 
 
@@ -3114,7 +3114,7 @@ async def _tg_callback(data):
         if provider not in cat:
             return {"alert": "Nhóm không hợp lệ"}
         label = "Claude" if provider == "claude" else "OpenRouter"
-        return {"text": f"⚙️ {label} — chọn model:", "reply_markup": _model_list_kb(provider)}
+        return {"text": f"⚙️ {label} - chọn model:", "reply_markup": _model_list_kb(provider)}
     if data.startswith("ms:"):
         try:
             _, provider, idx = data.split(":")
@@ -3130,9 +3130,9 @@ async def _tg_callback(data):
             if not m.get("openrouter_key"):
                 return {"alert": "Chưa có OpenRouter key (đặt ở dashboard)"}
             _set_main_model(s, "openrouter", mdl); cfgmod.write_settings(s)
-            return {"text": f"✅ OpenRouter — model: {mdl}\n(chat thuần, không MCP)", "alert": "Đã đổi model"}
+            return {"text": f"✅ OpenRouter - model: {mdl}\n(chat thuần, không MCP)", "alert": "Đã đổi model"}
         _set_main_model(s, "anthropic-cli", mdl.lower()); cfgmod.write_settings(s)
-        return {"text": f"✅ Claude Code — model: {mdl.lower()}\n(đầy đủ MCP/skill)", "alert": "Đã đổi model"}
+        return {"text": f"✅ Claude Code - model: {mdl.lower()}\n(đầy đủ MCP/skill)", "alert": "Đã đổi model"}
     return None
 
 
@@ -3152,13 +3152,13 @@ async def _tg_command(cmd, arg):
         s = cfgmod.read_settings()
         _set_main_model(s, "anthropic-cli", (s["model"].get("main") or {}).get("model") or s["model"].get("claude_model") or "opus")
         cfgmod.write_settings(s)
-        return {"reply": "✅ Provider: Anthropic (Claude Code) — đầy đủ MCP, hỏi POS/Ads/vault được."}
+        return {"reply": "✅ Provider: Anthropic (Claude Code) - đầy đủ MCP, hỏi POS/Ads/vault được."}
     if cmd in ("or", "openrouter"):
         s = cfgmod.read_settings()
         if not s["model"].get("openrouter_key"):
-            return {"reply": "⚠ Chưa có OpenRouter key — đặt trong Models trên dashboard trước."}
+            return {"reply": "⚠ Chưa có OpenRouter key - đặt trong Models trên dashboard trước."}
         _set_main_model(s, "openrouter", s["model"].get("openrouter_model")); cfgmod.write_settings(s)
-        return {"reply": f"✅ Provider: OpenRouter ({s['model'].get('openrouter_model')}) — chat thuần, không MCP."}
+        return {"reply": f"✅ Provider: OpenRouter ({s['model'].get('openrouter_model')}) - chat thuần, không MCP."}
     if cmd in ("help", "menu", "start"):
         return {"reply": await _tg_help_text(brain)}
     if cmd == "skills":
@@ -3188,7 +3188,7 @@ async def _tg_command(cmd, arg):
         busy = bool(_TG_BOT and _TG_BOT._current and not _TG_BOT._current.done())
         if not ags:
             return {"reply": "Chưa có agent nào (tạo trong Studio trên dashboard)."}
-        lines = [f"• {a.get('name')} — {(a.get('role') or '')[:50]}" for a in ags[:20]]
+        lines = [f"• {a.get('name')} - {(a.get('role') or '')[:50]}" for a in ags[:20]]
         return {"reply": f"🤖 Agents ({len(ags)}):\n" + "\n".join(lines) + f"\n\nĐang chạy lượt: {'có' if busy else 'không'}"}
     if cmd == "workflows":
         d = await list_workflows(brain); wfs = d.get("workflows", []) or []
@@ -3256,7 +3256,7 @@ async def telegram_test():
 
 if __name__ == "__main__":
     import uvicorn
-    # 127.0.0.1: chỉ máy này truy cập được (an toàn — tránh người khác trong mạng LAN
+    # 127.0.0.1: chỉ máy này truy cập được (an toàn - tránh người khác trong mạng LAN
     # chạy Claude full quyền trên máy + vault của bạn). Đổi qua JARVIS_HOST nếu cần.
     host = os.getenv("JARVIS_HOST", "127.0.0.1")
     port = int(os.getenv("JARVIS_PORT", "7777"))
