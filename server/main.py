@@ -2544,6 +2544,69 @@ async def do_update():
         return JSONResponse({"ok": False, "error": str(e), "manual": "./update.sh"}, status_code=500)
 
 
+# ---- Nhật ký cập nhật (changelog) -------------------------------------------
+_CL_VER_RE = re.compile(r"^##\s+\[?(\d+\.\d+\.\d+)\]?\s*[-:]?\s*(.*)$")
+_CL_SEC_RE = re.compile(r"^###\s+(.+?)\s*$")
+_CL_ITEM_RE = re.compile(r"^[-*]\s+(.+?)\s*$")
+
+
+def _parse_changelog(md: str):
+    """Parse CHANGELOG.md → [{version, date, sections:[{title, items:[...]}]}].
+    Nhận khối '## [x.y.z] - ngày', mục '### Nhóm', dòng '- việc'."""
+    releases, cur, sec = [], None, None
+    for line in (md or "").splitlines():
+        mv = _CL_VER_RE.match(line)
+        if mv:
+            cur = {"version": mv.group(1), "date": (mv.group(2) or "").strip(), "sections": []}
+            releases.append(cur); sec = None; continue
+        if cur is None:
+            continue
+        ms = _CL_SEC_RE.match(line)
+        if ms:
+            sec = {"title": ms.group(1).strip(), "items": []}
+            cur["sections"].append(sec); continue
+        mi = _CL_ITEM_RE.match(line)
+        if mi and sec is not None:
+            sec["items"].append(mi.group(1).strip())
+    return releases
+
+
+@app.get("/changelog")
+async def changelog_info():
+    """Nhật ký cập nhật: đọc CHANGELOG.md trong bản đang cài + đối chiếu bản trên GitHub để
+    nêu cả phiên bản mới chưa cài. Mất mạng vẫn trả được phần local (bản đã cài)."""
+    cur = _read_version()
+    p = PROJECT_ROOT / "CHANGELOG.md"
+    local_md = ""
+    try:
+        if p.exists():
+            local_md = p.read_text(encoding="utf-8")
+    except Exception:
+        local_md = ""
+    by_ver = {rel["version"]: rel for rel in _parse_changelog(local_md)}
+    err = None
+    try:
+        import httpx
+        url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/CHANGELOG.md"
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(url)
+            if r.status_code == 200:
+                for rel in _parse_changelog(r.text):
+                    by_ver.setdefault(rel["version"], rel)   # bản GitHub chưa có local = bản mới
+    except Exception as e:
+        err = type(e).__name__
+    merged = sorted(by_ver.values(), key=lambda r: _ver_tuple(r["version"]) or (0, 0, 0), reverse=True)
+    ct = _ver_tuple(cur) or (0, 0, 0)
+    for rel in merged:
+        vt = _ver_tuple(rel["version"]) or (0, 0, 0)
+        rel["installed"] = vt <= ct
+        rel["is_current"] = (vt == ct)
+    latest = merged[0]["version"] if merged else None
+    return {"current": cur, "latest": latest,
+            "update_available": bool(_ver_newer(latest, cur)),
+            "releases": merged, "error": err}
+
+
 # ============================================
 # Branding - logo/avatar đổi được qua UI (lưu ở STATE_DIR/branding, giữ qua update).
 # Trong Docker code tree read-only → KHÔNG ghi đè dashboard/logo.png; lưu ở volume state.

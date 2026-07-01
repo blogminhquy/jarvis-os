@@ -43,7 +43,7 @@
     { id: "models",      icon: ICON.models,      label: "Models" },
     { id: "channels",    icon: ICON.channels,    label: "Kênh" },
     { id: "mcp",         icon: ICON.mcp,         label: "MCP" },
-    { id: "logs",        icon: ICON.logs,        label: "Logs" },
+    { id: "logs",        icon: ICON.logs,        label: "Cập nhật" },
     { id: "account",     icon: ICON.account,     label: "Tài khoản" },
   ];
 
@@ -60,7 +60,7 @@
     models:      { icon: "◈", label: "Models", sub: "Main model & providers" },
     channels:    { icon: "✉", label: "Kênh kết nối", sub: "Telegram & hơn nữa" },
     mcp:         { icon: "🔌", label: "MCP", sub: "Công cụ ngoài" },
-    logs:        { icon: "☰", label: "Logs", sub: "Nhật ký hoạt động" },
+    logs:        { icon: "🗒", label: "Nhật ký cập nhật", sub: "Phiên bản & tính năng mới" },
     account:     { icon: "⚙", label: "Tài khoản", sub: "Đăng nhập & workspace" },
   };
 
@@ -126,6 +126,7 @@
     if (id === "account")  return renderAccount(el);
     if (id === "files")    return renderFiles(el);
     if (id === "selfimprove") return renderSelfImprove(el);
+    if (id === "logs")     return renderLogs(el);
     el.innerHTML = placeholder(id);
   }
 
@@ -143,6 +144,94 @@
       <div class="ph-ico">${m.icon || "✦"}</div>
       <div><b>${esc(m.label || id)}</b> - đang phát triển</div>
       <div style="max-width:380px;font-size:14px;opacity:.7">${esc(note || "Trang này là chỗ cắm chức năng mở rộng sau. Khung điều hướng đã sẵn sàng.")}</div>
+    </div>`;
+  }
+
+  // ============================================
+  // Trang Cập nhật (Nhật ký phiên bản / changelog)
+  // ============================================
+  let _clCss = false;
+  function _injectChangelogCss() {
+    if (_clCss) return; _clCss = true;
+    const css = `
+    .cl-wrap{max-width:760px}
+    .cl-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+    .cl-cur{font-size:15px;color:#cdd8ee}
+    .cl-badge{padding:3px 11px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.14)}
+    .cl-badge.up{background:rgba(120,180,255,.14);border-color:rgba(120,180,255,.5);color:#bcd2ff}
+    .cl-badge.ok{background:rgba(44,122,75,.15);border-color:#2c7a4b;color:#8fe3ad}
+    .cl-note{font-size:14px;color:#8a97b4;margin:2px 0 18px}
+    .cl-note code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px}
+    .cl-rel{position:relative;padding:0 0 6px 22px;border-left:2px solid rgba(120,180,255,.22);margin-left:6px}
+    .cl-rel:last-child{border-left-color:transparent}
+    .cl-rel:before{content:"";position:absolute;left:-8px;top:5px;width:12px;height:12px;border-radius:50%;background:#0a0f1c;border:2px solid rgba(120,180,255,.5)}
+    .cl-rel.cur:before{background:#2c7a4b;border-color:#3fdc86;box-shadow:0 0 0 4px rgba(63,220,134,.14)}
+    .cl-rel.new:before{background:#3b6fd0;border-color:#7fb0ff}
+    .cl-rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+    .cl-ver{font-size:18px;font-weight:700;color:#e7eefc}
+    .cl-date{font-size:13px;color:#7d8aa6}
+    .cl-tag{font-size:12px;padding:2px 9px;border-radius:12px;font-weight:600}
+    .cl-tag.cur{background:rgba(63,220,134,.16);color:#8fe3ad}
+    .cl-tag.new{background:rgba(120,180,255,.16);color:#bcd2ff}
+    .cl-sec{margin:0 0 12px}
+    .cl-sec h4{margin:8px 0 5px;font-size:14px;color:#aebbd6;font-weight:600}
+    .cl-sec ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+    .cl-sec li{font-size:14.5px;color:#cdd8ee;line-height:1.5;padding-left:24px;position:relative}
+    .cl-sec li:before{position:absolute;left:0;top:0}
+    .cl-sec.feat li:before{content:"✨"} .cl-sec.fix li:before{content:"🔧"}
+    .cl-sec.imp li:before{content:"⚡"} .cl-sec.sec li:before{content:"🔒"}
+    .cl-sec.doc li:before{content:"📖"} .cl-sec.other li:before{content:"•"}
+    .cl-empty{color:#8a97b4;font-size:15px}`;
+    const s = document.createElement("style"); s.textContent = css; document.head.appendChild(s);
+  }
+  function _clSecClass(title) {
+    const t = (title || "").toLowerCase();
+    if (t.includes("thêm") || t.includes("mới")) return "feat";
+    if (t.includes("sửa") || t.includes("lỗi") || t.includes("fix")) return "fix";
+    if (t.includes("cải thiện") || t.includes("improve")) return "imp";
+    if (t.includes("bảo mật") || t.includes("security")) return "sec";
+    if (t.includes("tài liệu") || t.includes("doc")) return "doc";
+    return "other";
+  }
+  async function renderLogs(el) {
+    _injectChangelogCss();
+    const myGen = _renderGen;
+    el.innerHTML = `<div class="cl-wrap"><div class="cl-note">Đang tải nhật ký cập nhật...</div></div>`;
+    let d;
+    try {
+      const r = await fetch("/changelog");
+      d = await r.json();
+    } catch (e) {
+      if (myGen !== _renderGen) return;
+      el.innerHTML = `<div class="cl-wrap"><div class="cl-empty">Không tải được nhật ký cập nhật. Hãy tải lại trang.</div></div>`;
+      return;
+    }
+    if (myGen !== _renderGen) return;   // đã đổi trang trong lúc chờ
+    const cur = d.current || "?";
+    const upBadge = d.update_available
+      ? `<span class="cl-badge up">Có bản mới: v${esc(d.latest)}</span>`
+      : `<span class="cl-badge ok">Đang ở bản mới nhất</span>`;
+    const upNote = d.update_available
+      ? `<div class="cl-note">Cập nhật ở mục <b>Tổng quan</b> (nút "Cập nhật ngay"), hoặc chạy <code>./update.sh</code> trên VPS.</div>`
+      : "";
+    const rels = d.releases || [];
+    const timeline = rels.length ? rels.map(rel => {
+      const cls = rel.is_current ? "cur" : (rel.installed ? "" : "new");
+      const tag = rel.is_current ? `<span class="cl-tag cur">đang dùng</span>`
+        : (!rel.installed ? `<span class="cl-tag new">bản mới</span>` : "");
+      const secs = (rel.sections || []).map(s => {
+        const items = (s.items || []).map(it => `<li>${esc(it)}</li>`).join("");
+        return `<div class="cl-sec ${_clSecClass(s.title)}"><h4>${esc(s.title)}</h4><ul>${items}</ul></div>`;
+      }).join("");
+      return `<div class="cl-rel ${cls}">
+        <div class="cl-rtop"><span class="cl-ver">v${esc(rel.version)}</span>${rel.date ? `<span class="cl-date">${esc(rel.date)}</span>` : ""}${tag}</div>
+        ${secs || '<div class="cl-empty">(không có chi tiết)</div>'}
+      </div>`;
+    }).join("") : `<div class="cl-empty">Chưa có nhật ký. Thêm file <code>CHANGELOG.md</code> ở gốc dự án.</div>`;
+    el.innerHTML = `<div class="cl-wrap">
+      <div class="cl-head"><span class="cl-cur">Đang cài: <b>v${esc(cur)}</b></span>${upBadge}</div>
+      ${upNote}
+      ${timeline}
     </div>`;
   }
 
