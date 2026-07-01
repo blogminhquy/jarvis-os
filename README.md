@@ -52,18 +52,25 @@ Bạn đấu các **MCP** của riêng mình vào (bán hàng/POS, quảng cáo,
 
 > ⚠️ **Quan trọng về bảo mật:** Javis chạy Claude với **toàn quyền** trên máy. Khi chạy public (Docker/VPS/Hostinger), Javis **tự bắt buộc đăng nhập** - mở app ra là màn tạo tài khoản / đăng nhập, không ai điều khiển được khi chưa có mật khẩu.
 
-### Cách 1 - Hostinger Docker Manager (1-click, nhanh nhất) ⚡
+### Cách 1 - Hostinger Docker Manager (tên miền + HTTPS) ⚡
 
-VPS Hostinger → **Docker Manager → Compose → URL** → dán rồi **Deploy**:
+VPS Hostinger → **Docker Manager → Compose → URL** → dán **file Hostinger** rồi **Deploy**:
 ```
-https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.yml
+https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.hostinger.yml
 ```
-Hostinger tự pull image + cấp URL `https://<app>.<vps>.hstgr.cloud` + nút **Open app**.
+Ô **Environment** đặt biến `DOMAIN_NAME` (BẮT BUỘC, để Traefik của Hostinger cấp HTTPS):
+- **Link miễn phí** (không cần mua tên miền): `DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud`
+  (hostname xem ở hPanel → VPS, vd `javis.srv1782015.hstgr.cloud`).
+- **Tên miền riêng:** `DOMAIN_NAME=tenmien.com` + trỏ DNS A về IP VPS.
+
+Deploy → đợi 1-3 phút Traefik cấp SSL → mở `https://<DOMAIN_NAME>`. (Chi tiết + xử lý sự cố: [DEPLOY.md](DEPLOY.md).)
+
+> Chỉ muốn chạy nhanh bằng `http://<ip>:7777` (chưa cần tên miền): dùng `docker-compose.yml` (Cách 2).
 
 **3 việc làm 1 lần:**
 1. **Để image GHCR ở chế độ Public:** GitHub → repo → **Packages** → `javis-os` → *Package settings* → Visibility = **Public**.
 2. **Tạo tài khoản admin** (chọn 1):
-   - *Khuyến nghị:* thêm env `JAVIS_ADMIN_USER` + `JAVIS_ADMIN_PASSWORD` trong compose Hostinger → mở app **đăng nhập luôn**.
+   - *Khuyến nghị:* thêm env `JAVIS_ADMIN_USER` + `JAVIS_ADMIN_PASSWORD` ở ô Environment → mở app **đăng nhập luôn**.
    - *Hoặc:* mở app sẽ hỏi **MÃ THIẾT LẬP** - trong **App terminal** (vào bên trong container) chạy: `cat /data/state/.setup_token`.
 3. **Đăng nhập Claude (bộ não):** App terminal → `claude auth login --claudeai` → mở link, dán code.
 
@@ -227,7 +234,9 @@ javis-os/
 ├── dashboard/           # Frontend (voice, đồ thị 3D, console, studio)
 ├── Brain Default/       # Brain mẫu (agents/workflows/wiki - dữ liệu cá nhân được .gitignore)
 ├── Dockerfile           # Image: python + Node + Claude CLI
-├── docker-compose.yml   # Production (pull image GHCR) - dán URL này vào Hostinger
+├── docker-compose.yml   # Production (pull image GHCR) - VPS thường, vào bằng http://<ip>:7777
+├── docker-compose.hostinger.yml  # Cho Hostinger: tên miền + HTTPS qua Traefik (đặt DOMAIN_NAME)
+├── docker-compose.https.yml      # Auto-HTTPS bằng Caddy cho VPS thường (kèm file trên)
 ├── install.sh           # Cài native Linux/macOS
 ├── update.sh            # Cập nhật trên VPS
 ├── docs/                # Hướng dẫn sử dụng chi tiết từng chức năng (17 trang + mục lục)

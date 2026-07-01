@@ -62,14 +62,15 @@ services:
     # URL cố định: tạo named tunnel ở Cloudflare Zero Trust → TUNNEL_TOKEN env → đổi command thành:
     #   command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
 
-  # Cập nhật 1-CLICK từ trong UI (nút "Cập nhật ngay" ở Tổng quan). CHỈ Watchtower có quyền Docker
-  # (socket); app Javis KHÔNG được cấp socket → an toàn hơn. Bấm nút → app gọi Watchtower qua HTTP
-  # (kèm token) → Watchtower kéo image GHCR mới + tạo lại container javis. Không cần terminal.
-  # Không muốn tính năng này? Xoá/comment cả service dưới (bản Docker sẽ chỉ "kiểm tra + báo có bản mới").
+  # Cập nhật 1-CLICK từ UI (nút "Cập nhật ngay"). Watchtower cần quyền Docker (socket) nên hay báo
+  # "Partially running" trên Hostinger Docker Manager → MẶC ĐỊNH TẮT (profile "update"). Bật khi cần:
+  #   docker compose --profile update up -d
+  # (Hostinger: dùng docker-compose.hostinger.yml + Redeploy để cập nhật, KHÔNG cần Watchtower.)
   watchtower:
     image: containrrr/watchtower
     container_name: javis-watchtower
     restart: unless-stopped
+    profiles: ["update"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
