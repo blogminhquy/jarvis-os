@@ -76,26 +76,25 @@ Mọi ghi chú / vault / settings nằm trong Docker volume (`javis-data`, `clau
 > → mở URL `https://...trycloudflare.com` → mic + voice chạy. (URL đổi mỗi restart; muốn cố định →
 > *named tunnel* + `TUNNEL_TOKEN`, xem mục Cloudflare Tunnel bên dưới.)
 
-#### 🌐 Link mặc định + HTTPS trên Hostinger (KHÔNG cần mua tên miền)
+#### 🌐 Tên miền + HTTPS trên Hostinger (KHÔNG cần mua tên miền)
 
-Hostinger có sẵn **wildcard DNS** `*.<hostname-vps>.hstgr.cloud` + **Traefik** tự cấp SSL + biến
-`TRAEFIK_HOST` (= hostname VPS). File `docker-compose.hostinger.yml` gắn nhãn Traefik **đúng mẫu Hermes**
-(Host = `${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) nên **deploy xong là có link tự động, không cần đặt gì**:
+Hostinger có sẵn **wildcard DNS** `*.<hostname-vps>.hstgr.cloud` + **Traefik** tự cấp SSL. Nên bạn lấy được
+link riêng chạy HTTPS mà không cần mua tên miền. **Lưu ý (đã kiểm chứng):** Hostinger **KHÔNG** tự cấp biến
+`TRAEFIK_HOST` cho compose dán tay (chỉ cấp cho app Catalog), nên **bắt buộc đặt 1 biến `DOMAIN_NAME`**:
 
-1. Docker Manager → Compose → URL:
+1. Xem **hostname VPS** ở hPanel → VPS (vd `srv1782015.hstgr.cloud`).
+2. Docker Manager → Compose → URL:
    ```
    https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.hostinger.yml
    ```
-2. **Deploy.** Link tự động = `<tên-project>.<hostname-vps>.hstgr.cloud` (vd `javis-os.srv1782015.hstgr.cloud`),
-   Traefik tự cấp SSL sau 1-3 phút → bấm **Open**.
+3. Ô **Environment** (Biến môi trường) đặt **`DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud`**
+   (vd `DOMAIN_NAME=javis.srv1782015.hstgr.cloud`). Muốn tên miền RIÊNG (vd `javisos.com`) thì đặt tên miền đó + trỏ DNS A về IP VPS.
+4. **Deploy** → đợi 1-3 phút Traefik cấp SSL → mở `https://<DOMAIN_NAME>`.
 
-**Muốn tên miền riêng** (vd `javisos.com`): trỏ DNS `A <tên miền> → IP VPS`, rồi ô **Environment** đặt
-`DOMAIN_NAME=<tên miền>` → Deploy lại.
-
+> Nếu thiếu `DOMAIN_NAME`, deploy **báo lỗi rõ** (thay vì ra link cụt `javis-os.`). Không thấy ô Environment?
+> Bấm **Manage → sửa .yaml**, đổi thẳng dòng `Host(...)` thành `Host(\`javis.srv1782015.hstgr.cloud\`)`.
 > **Điểm mấu chốt** (rút từ compose thật của Hermes): nhãn Traefik gắn thẳng vào service, **KHÔNG khai báo
-> `networks:` / `external: traefik-proxy`** (chính chỗ này trước đây làm deploy báo "network not found").
-> Host mặc định dùng biến `TRAEFIK_HOST` do Hostinger cấp; nếu link tự động không lên thì đặt tay
-> `DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud`. Vẫn có `:7777` làm đường vào dự phòng.
+> `networks:` / `external: traefik-proxy`** (chỗ này trước đây làm deploy báo "network not found").
 > **Caddy (`docker-compose.https.yml`) KHÔNG dùng trên Hostinger** vì cổng 80/443 đã bị Traefik của họ chiếm.
 > Không rành? Dùng **Cloudflare Tunnel** (mục dưới) - cho URL HTTPS mà không đụng gì tới proxy của Hostinger.
 
