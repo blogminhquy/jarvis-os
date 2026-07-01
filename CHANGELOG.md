@@ -4,6 +4,10 @@ Lịch sử phiên bản Jarvis OS. Bản mới nhất ở trên cùng. Xem ngay
 
 Định dạng: mỗi phiên bản là một khối `## [x.y.z] - ngày`, bên dưới nhóm thay đổi theo `### Thêm mới / Sửa lỗi / Cải thiện / Bảo mật`.
 
+## [0.4.5] - 2026-07-01
+### Sửa lỗi
+- docker-compose.hostinger.yml bỏ Watchtower (cần Docker socket, hay gây "Partially running" trên Hostinger Docker Manager). Bản Hostinger giờ chỉ 1 container jarvis + nhãn Traefik, cập nhật bằng Redeploy.
+
 ## [0.4.4] - 2026-07-01
 ### Thêm mới
 - File docker-compose.hostinger.yml: chạy Jarvis trên Hostinger với tên miền riêng + HTTPS qua Traefik có sẵn của Hostinger, bỏ cổng :7777.
