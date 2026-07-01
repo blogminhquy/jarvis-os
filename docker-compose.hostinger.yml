@@ -1,24 +1,24 @@
 # ============================================================================
-# Javis OS - HOSTINGER VPS (Docker Manager). Có LINK MẶC ĐỊNH + HTTPS như app Catalog (Hermes/n8n).
+# Javis OS - HOSTINGER VPS (Docker Manager). LINK MẶC ĐỊNH + HTTPS TỰ ĐỘNG như app Catalog (Hermes/n8n).
 #
 # Hostinger có sẵn: (1) wildcard DNS *.<hostname-vps>.hstgr.cloud trỏ về VPS, (2) reverse proxy Traefik
-# tự cấp SSL. Bạn KHÔNG cần mua tên miền: đặt DOMAIN_NAME = <tên>.<hostname-vps>.hstgr.cloud là có link
-# riêng chạy HTTPS ngay. Nhãn Traefik dưới đây COPY theo đúng mẫu app Hermes chạy tốt trên Hostinger
-# (điểm mấu chốt: KHÔNG khai báo network - Traefik tự thấy container qua nhãn).
+# tự cấp SSL, (3) biến TRAEFIK_HOST = hostname VPS. File này gắn nhãn Traefik ĐÚNG mẫu Hermes
+# (mấu chốt: KHÔNG khai báo network) nên deploy xong là CÓ LINK chạy HTTPS, KHÔNG cần cấu hình gì.
 #
-# CÁCH DÙNG:
-#   1) Xem hostname VPS ở hPanel > VPS (vd: srv1782015.hstgr.cloud).
-#   2) Docker Manager > Compose > URL > dán:
+# CÁCH DÙNG (đơn giản nhất - không cần đặt biến):
+#   1) Docker Manager > Compose > URL > dán:
 #      https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.hostinger.yml
-#   3) Ô Environment đặt (BẮT BUỘC):
-#         DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud
-#      Ví dụ:  DOMAIN_NAME=javis.srv1782015.hstgr.cloud
-#      (Muốn dùng tên miền RIÊNG của bạn thì điền tên miền đó + trỏ DNS A về IP VPS trước.)
-#   4) Deploy > đợi 1-3 phút cho Traefik cấp chứng chỉ > mở  https://<DOMAIN_NAME>.
+#   2) Deploy. Link tự động = <tên-project>.<hostname-vps>.hstgr.cloud
+#      (vd javis-os.srv1782015.hstgr.cloud). Traefik tự cấp SSL sau 1-3 phút. Bấm Open để vào.
+#
+# MUỐN TÊN MIỀN RIÊNG (vd javisos.com):
+#   - Trỏ DNS: bản ghi  A  <tên miền>  ->  IP VPS (xem IP ở hPanel > VPS).
+#   - Ô Environment đặt:  DOMAIN_NAME=<tên miền>  (vd DOMAIN_NAME=javisos.com) > Deploy lại.
 #
 # GHI CHÚ:
-#   - Không đặt DOMAIN_NAME cũng deploy được, nhưng chỉ vào tạm bằng nút Open / :7777 (chưa có domain).
-#   - Vẫn publish 7777 để có đường vào dự phòng khi cert chưa cấp xong.
+#   - Nếu link tự động KHÔNG lên (Traefik của bạn không có biến TRAEFIK_HOST): đặt tay ô Environment
+#     DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud  (vd DOMAIN_NAME=javis.srv1782015.hstgr.cloud).
+#   - Vẫn publish 7777 làm đường vào dự phòng (nút Open / http://<ip>:7777) khi cert chưa cấp xong.
 #   - VPS KHÔNG phải Hostinger: bỏ file này, dùng docker-compose.yml + docker-compose.https.yml (Caddy).
 #   - Image GHCR phải để PUBLIC (GitHub > Packages > javis-os > Package settings > Public).
 # ============================================================================
@@ -41,10 +41,12 @@ services:
       - "7777:7777"                 # đường vào dự phòng (nút Open / http://<ip>:7777)
     labels:
       # Copy đúng mẫu Hermes: KHÔNG có traefik.docker.network, KHÔNG có networks external.
-      # Tên router/service = ${COMPOSE_PROJECT_NAME} (tên project) → mỗi lần deploy 1 tên khác nhau,
-      # chạy được NHIỀU bản Javis trên cùng 1 VPS mà không đụng nhau (giống đuôi -efxd của Hermes).
+      # Tên router/service = ${COMPOSE_PROJECT_NAME} (tên project) → mỗi bản deploy 1 tên khác nhau,
+      # chạy được NHIỀU bản trên cùng VPS không đụng nhau (giống đuôi -efxd của Hermes).
+      # HOST tự động = <tên-project>.${TRAEFIK_HOST} (Hostinger tự cấp TRAEFIK_HOST = hostname VPS)
+      # → giống Hermes, KHÔNG cần đặt gì. Muốn tên miền riêng thì đặt biến DOMAIN_NAME để ghi đè.
       - traefik.enable=true
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-javis}.rule=Host(`${DOMAIN_NAME:-javis.localhost}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-javis}.rule=Host(`${DOMAIN_NAME:-${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}}`)
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-javis}.entrypoints=websecure
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-javis}.tls.certresolver=letsencrypt
       - traefik.http.services.${COMPOSE_PROJECT_NAME:-javis}.loadbalancer.server.port=7777
