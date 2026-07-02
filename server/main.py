@@ -867,14 +867,15 @@ async def settings_set(section: str = Form(...), data: str = Form("{}")):
 # BACKUP brain lên GitHub (đồng bộ repo riêng, khôi phục khi mất máy/VPS)
 # UI + hướng dẫn ở trang Tự học (console.js renderLearn). Token lưu settings.json (gitignored).
 # ============================================================
-def _do_backup(brain: str) -> dict:
-    """Chạy 1 lần backup (đồng bộ nghẽn - gọi trong thread). Cập nhật last_backup/last_status."""
+def _do_backup(brain: str = "") -> dict:
+    """Backup TOÀN BỘ thư mục brains (mọi brain, 1 lần) lên repo GitHub. Tham số brain giữ cho
+    tương thích chữ ký cũ nhưng KHÔNG dùng - luôn backup cả BRAINS_DIR. Cập nhật last_backup/status."""
     cfg = cfgmod.read_settings()
     b = cfg.get("backup", {}) or {}
     if not (b.get("repo_url") and b.get("token")):
         return {"ok": False, "error": "Chưa cấu hình repo URL + token"}
-    root = _brain_root(brain)
-    res = git_brain.backup_to_github(root, b["repo_url"], b["token"], b.get("branch") or "main")
+    mirror = str(cfgmod.STATE_DIR / "brains-backup")   # repo mirror riêng (tránh nested git từng brain)
+    res = git_brain.backup_brains(BRAINS_DIR, mirror, b["repo_url"], b["token"], b.get("branch") or "main")
     # Ghi lại trạng thái (đọc lại cfg mới nhất để không đè thay đổi song song)
     cfg = cfgmod.read_settings()
     cfg.setdefault("backup", {})
@@ -889,7 +890,11 @@ def _do_backup(brain: str) -> dict:
 async def backup_status(brain: str = Query("brain")):
     cfg = cfgmod.read_settings()
     b = cfg.get("backup", {}) or {}
-    root = _brain_root(brain)
+    # Đếm số brain trong BRAINS_DIR (để UI báo "backup N brain")
+    try:
+        n_brains = len([d for d in Path(BRAINS_DIR).iterdir() if d.is_dir() and not d.name.startswith(".")])
+    except Exception:
+        n_brains = 0
     return {
         "enabled": bool(b.get("enabled")),
         "repo_url": b.get("repo_url", ""),
@@ -899,7 +904,8 @@ async def backup_status(brain: str = Query("brain")):
         "last_backup": b.get("last_backup", 0.0),
         "last_status": b.get("last_status", ""),
         "has_git": git_brain.has_git(),
-        "is_git": git_brain.is_git_checkout(root),
+        "brains_dir": BRAINS_DIR,
+        "brains_count": n_brains,
     }
 
 
@@ -2595,10 +2601,7 @@ async def _start_scheduler():
                     if bcfg.get("enabled") and bcfg.get("repo_url") and bcfg.get("token") and git_brain.has_git():
                         interval = max(1, int(bcfg.get("interval_hours", 6))) * 3600
                         if time.time() - float(bcfg.get("last_backup", 0)) >= interval:
-                            # Backup mỗi brain learn đang theo dõi (nơi có dữ liệu mới); fallback brain mặc định
-                            _bbrains = learn_feature.read_config().get("brains") or ["brain"]
-                            for _bb in _bbrains:
-                                await asyncio.to_thread(_do_backup, _bb)
+                            await asyncio.to_thread(_do_backup)   # 1 lần: toàn bộ thư mục brains
                 except Exception as be:
                     print(f"[backup tick] {type(be).__name__}: {be}", file=__import__('sys').stderr)
             except Exception as e:

@@ -1,6 +1,8 @@
 # Sao lưu brain lên GitHub
 
-Tính năng này đồng bộ toàn bộ **brain** (ghi chú, Wiki, ký ức, agent/workflow) lên một repo GitHub **riêng tư** của bạn. Mục đích: không mất dữ liệu khi hỏng máy, mất VPS, hoặc lỡ xoá nhầm - bạn luôn có bản sao trên GitHub và xem được lịch sử thay đổi.
+Tính năng này đồng bộ **TẤT CẢ brain trong thư mục brains** (mọi bộ não: ghi chú, Wiki, ký ức, agent/workflow) lên một repo GitHub **riêng tư** của bạn, trong MỘT lần. Mục đích: không mất dữ liệu khi hỏng máy, mất VPS, hoặc lỡ xoá nhầm - bạn luôn có bản sao trên GitHub, xem được lịch sử, và chuyển sang máy khác chỉ bằng một `git clone`.
+
+> Nên để **mọi brain nằm trong thư mục brains** (tạo brain mới qua nút ➕ là tự vào đó). Backup lấy nguyên thư mục brains làm một khối, nên brain nào nằm ngoài (chọn folder ngoài bằng nút 📁) sẽ KHÔNG được sao lưu chung - hãy chuyển nó vào brains để đồng bộ cùng.
 
 Mở tại: trang **Tự học** (thanh bên trái), kéo xuống mục **☁ Sao lưu brain lên GitHub**.
 
@@ -47,19 +49,20 @@ Xong. Từ giờ Javis đẩy brain lên GitHub theo lịch (và bạn bấm "Sa
 
 ## Cách nó hoạt động
 
-- Backup dùng git: brain được git-init (nếu chưa), commit toàn bộ, rồi **force-push** lên repo của bạn. Bản local là bản gốc - GitHub luôn khớp với local sau mỗi lần đẩy.
-- Token **không** được lưu vào brain hay đẩy lên repo. Nó nằm trong `settings.json` nội bộ (đã được git bỏ qua). Thông báo lỗi cũng tự che token.
-- File nhạy cảm (khoá lock, log thô, hội thoại gốc) đã được `.gitignore` loại khỏi bản đẩy.
+- Backup soi cả thư mục brains, tạo một bản sao sạch (bỏ file nhạy cảm + git thô của từng brain) rồi **force-push** cả khối lên repo của bạn. Bản local là gốc - GitHub luôn khớp local sau mỗi lần đẩy. Mỗi brain là một thư mục con trong repo.
+- Token **không** được lưu vào brain hay đẩy lên repo. Nó nằm trong `settings.json` nội bộ (đã git bỏ qua). Thông báo lỗi cũng tự che token.
+- File nhạy cảm bị loại khỏi bản đẩy: hội thoại gốc (`memory/conversations`), log loop/learn, khoá lock, file `.tmp`, và `.git` riêng của từng brain (tránh lỗi nested-repo).
+- Xoá một brain khỏi máy thì lần backup sau repo cũng bỏ brain đó (đồng bộ 2 chiều theo nội dung local).
 
 ## Khôi phục brain từ backup
 
-Trên máy mới, clone repo về đúng thư mục brain:
+Trên máy mới, clone repo thẳng vào thư mục brains:
 
 ```
-git clone https://github.com/<tên-bạn>/javis-brain-backup.git "đường-dẫn-brain-mới"
+git clone https://github.com/<tên-bạn>/javis-brain-backup.git "<đường-dẫn>/brains"
 ```
 
-Rồi trong Javis chọn brain đó (nút 📁 chọn folder), hoặc đặt biến môi trường trỏ tới nó.
+Mỗi thư mục con trong đó là một brain; Javis sẽ tự thấy chúng trong bộ chọn brain (nút chọn brain trên thanh trên). Trên Docker, thư mục brains là volume `javis-brains`.
 
 ## Lưu ý an toàn
 

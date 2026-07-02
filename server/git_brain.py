@@ -261,6 +261,90 @@ def remote_reachable(repo_url: str, token: str, timeout: int = 30) -> dict:
         return {"ok": False, "error": _redact(f"{type(e).__name__}: {e}", token)}
 
 
+# Path (dạng posix, tương đối) KHÔNG đưa vào backup: git thô của brain (tránh nested-repo),
+# hội thoại gốc/log/khoá (có thể chứa secret), file tạm.
+_BACKUP_SKIP_DIRS = {".git"}
+_BACKUP_SKIP_SUBSTR = ("/memory/conversations/", "/Memory/conversations/",
+                       "/Javis/loop-log/", "/Javis/learn-log/", "/Javis/learn-staging/")
+
+
+def _backup_skip(rel: str) -> bool:
+    r = "/" + rel.replace("\\", "/") + "/"
+    if any(s in r for s in _BACKUP_SKIP_SUBSTR):
+        return True
+    name = rel.replace("\\", "/").rsplit("/", 1)[-1]
+    return name == ".javis-learn.lock" or name.endswith(".tmp")
+
+
+def _sync_mirror(src: str, mirror: str) -> None:
+    """Đồng bộ src -> mirror: chép file mới/đổi (bỏ .git nested + file nhạy cảm/tạm), xoá file
+    thừa trong mirror. Mirror KHÔNG có .git nested nào -> git add -A ở mirror chạy sạch."""
+    src, mirror = Path(src), Path(mirror)
+    keep = set()
+    for dirpath, dirnames, filenames in os.walk(src):
+        dirnames[:] = [d for d in dirnames if d not in _BACKUP_SKIP_DIRS]
+        for fn in filenames:
+            full = Path(dirpath) / fn
+            rel = str(full.relative_to(src))
+            if _backup_skip(rel):
+                continue
+            keep.add(rel.replace("\\", "/"))
+            dst = mirror / rel
+            try:
+                if dst.exists() and dst.stat().st_size == full.stat().st_size and \
+                        int(dst.stat().st_mtime) >= int(full.stat().st_mtime):
+                    continue
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(full, dst)
+            except Exception as e:
+                print(f"[backup sync copy] {rel}: {e}", file=__import__('sys').stderr)
+    # prune: xoá file trong mirror (trừ .git của mirror) mà src không còn
+    for dirpath, dirnames, filenames in os.walk(mirror):
+        if ".git" in Path(dirpath).parts:
+            continue
+        for fn in filenames:
+            full = Path(dirpath) / fn
+            rel = str(full.relative_to(mirror)).replace("\\", "/")
+            if rel not in keep:
+                try:
+                    full.unlink()
+                except Exception:
+                    pass
+
+
+def backup_brains(brains_dir: str, mirror_dir: str, repo_url: str, token: str, branch: str = "main") -> dict:
+    """Backup TOÀN BỘ thư mục brains (mọi brain) lên 1 repo GitHub, trong 1 lần.
+    Cách làm: đồng bộ brains_dir -> mirror_dir (bỏ .git nested + file nhạy cảm), mirror là repo git
+    RIÊNG -> force-push. Tránh hoàn toàn vấn đề nested git-repo của từng brain."""
+    if not has_git():
+        return {"ok": False, "error": "Máy chưa cài git (cần cài git để backup)"}
+    if not repo_url or not token:
+        return {"ok": False, "error": "Chưa cấu hình repo URL hoặc token"}
+    if not Path(brains_dir).is_dir():
+        return {"ok": False, "error": f"Thư mục brains không tồn tại: {brains_dir}"}
+    try:
+        Path(mirror_dir).mkdir(parents=True, exist_ok=True)
+        if not is_git_checkout(mirror_dir):
+            r = _git(mirror_dir, "init")
+            if r.returncode != 0:
+                return {"ok": False, "error": (r.stderr or "git init lỗi")[:200]}
+            _git(mirror_dir, "config", "user.email", "javis@localhost")
+            _git(mirror_dir, "config", "user.name", "Javis Backup")
+        _sync_mirror(brains_dir, mirror_dir)
+        _git(mirror_dir, "add", "-A")
+        ts = time.strftime("%Y-%m-%d %H:%M:%S")
+        c = _git(mirror_dir, "commit", "-m", f"backup: {ts}")
+        committed = c.returncode == 0
+        au = _auth_url(repo_url, token)
+        r = _git(mirror_dir, "push", "--force", au, f"HEAD:refs/heads/{branch}", timeout=180)
+        if r.returncode != 0:
+            return {"ok": False, "committed": committed,
+                    "error": _redact((r.stderr or "push lỗi").strip()[:300], token)}
+        return {"ok": True, "pushed": True, "committed": committed}
+    except Exception as e:
+        return {"ok": False, "error": _redact(f"{type(e).__name__}: {e}", token)}
+
+
 def backup_to_github(root: str, repo_url: str, token: str, branch: str = "main") -> dict:
     """Đồng bộ TOÀN BỘ brain lên repo GitHub riêng (force-push: local là bản gốc).
     Trả {ok, pushed, committed, error}. Token luôn được redact khỏi mọi chuỗi trả về.

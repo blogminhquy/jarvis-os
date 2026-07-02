@@ -644,7 +644,7 @@
 
       <div class="si-log" id="lnBackupBox">
         <h3 style="font-size:15px;color:#cdd8ee">☁ Sao lưu brain lên GitHub</h3>
-        <p style="color:#9fb0cf;font-size:14px;max-width:680px;margin:2px 0 10px">Đồng bộ toàn bộ brain (ghi chú, Wiki, ký ức) lên 1 repo GitHub <b>riêng tư</b> để không mất dữ liệu khi hỏng máy/VPS. Xem hướng dẫn chi tiết: <a href="https://github.com/blogminhquy/javis-os/blob/main/docs/18-sao-luu-github.md" target="_blank" style="color:#7fb0ff">docs/18-sao-luu-github.md</a>.</p>
+        <p style="color:#9fb0cf;font-size:14px;max-width:680px;margin:2px 0 10px">Đồng bộ <b>TẤT CẢ brain trong thư mục brains</b> (mọi bộ não, ghi chú, Wiki, ký ức) lên 1 repo GitHub <b>riêng tư</b> trong một lần - không mất dữ liệu khi hỏng máy/VPS, dễ chuyển máy. Xem hướng dẫn chi tiết: <a href="https://github.com/blogminhquy/javis-os/blob/main/docs/18-sao-luu-github.md" target="_blank" style="color:#7fb0ff">docs/18-sao-luu-github.md</a>.</p>
         <ol style="color:#9fb0cf;font-size:13.5px;line-height:1.7;max-width:680px;margin:0 0 12px;padding-left:20px">
           <li>Tạo repo GitHub <b>Private</b> (trống, KHÔNG thêm README) - vd <code>javis-brain-backup</code>.</li>
           <li>Tạo token: GitHub → Settings → Developer settings → <b>Fine-grained tokens</b> → chọn đúng repo đó → quyền <b>Contents: Read and write</b> → tạo và copy token (dạng <code>github_pat_...</code>).</li>
@@ -792,7 +792,8 @@
       bkAutoOn = !!s.enabled; bkAutoBtn.classList.toggle("sel", bkAutoOn); bkAutoBtn.textContent = bkAutoOn ? "● Bật" : "○ Tắt";
       const when = s.last_backup ? new Date(s.last_backup * 1000).toLocaleString() : "chưa sao lưu";
       const gitNote = s.has_git ? "" : " · ⚠ máy chưa cài git (cần git để backup)";
-      el.querySelector("#bkStatus").innerHTML = `Lần cuối: ${esc(when)}${s.last_status ? " · " + esc(s.last_status) : ""}${gitNote}`;
+      const brainsNote = s.brains_count != null ? ` · ${s.brains_count} brain trong thư mục brains` : "";
+      el.querySelector("#bkStatus").innerHTML = `Lần cuối: ${esc(when)}${s.last_status ? " · " + esc(s.last_status) : ""}${brainsNote}${gitNote}`;
     }
 
     function loadAll() { loadMetrics(); loadReview(); loadLog(); loadBackup(); }
