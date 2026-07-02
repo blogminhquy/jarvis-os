@@ -160,9 +160,9 @@ class LearnFeature:
         self.deps = deps
         self.config_path = Path(deps.state_dir) / "learn_config.json"
         self.DEFAULT = {
-            "enabled": False,
-            "mode": "dry-run",                 # dry-run | suggest | auto
-            "capabilities": {"memory": True, "wiki": False, "skill": False, "task": False},
+            "enabled": True,                    # mặc định BẬT tự học ngay
+            "mode": "auto",                     # dry-run | suggest | auto - mặc định tự ghi (không cần git)
+            "capabilities": {"memory": True, "wiki": True, "skill": True, "task": True},  # bật hết
             "debounce": {"k": 3, "idle_min": 10, "dense_idle_min": 3},
             "rate": {"min_interval_s": 90, "fork_day": 40, "token_day": 300000},
             "curator": {"enabled": False, "interval_hours": 24, "last_run": 0.0},
@@ -238,8 +238,13 @@ class LearnFeature:
             cfg = self.read_config()
             if not cfg.get("enabled"):
                 return
-            if brain not in (cfg.get("brains") or ["brain"]):
-                return
+            # Tự học BẬT = học MỌI brain đang trò chuyện. Brain chưa có trong danh sách →
+            # tự đăng ký (persist 1 lần) để không phải vào trang Tự học bấm lưu thủ công.
+            brains = cfg.get("brains") or ["brain"]
+            if brain not in brains:
+                brains.append(brain)
+                cfg["brains"] = brains
+                self.write_config(cfg)
             kind = self._classify_turn(user, assistant)
             if kind == "low":
                 return
@@ -675,16 +680,16 @@ class LearnFeature:
             if caps.get("skill") and (cfg.get("mode") == "auto" or force_write) and (manifest.get("skills")):
                 manifest["skills"] = await self._verify_skills(brain, manifest.get("skills") or [], cfg)
 
-            # quyết định allow_write
+            # quyết định allow_write. GIT KHÔNG còn bắt buộc: engine tự học ghi được kể cả khi
+            # brain chưa phải git repo (chỉ mất khả năng undo 1-chạm/backup - xem note UI).
+            # Khi CÓ git thì _promote_sync vẫn tự commit → giữ undo. Rào an toàn giữ nguyên:
+            # fork read-only + secret/injection-scan + scope guard + facts append-only.
             mode = cfg.get("mode", "dry-run")
             root = self.deps.brain_root(brain)
             rate = self._rate_check(cfg)
-            git_ok = git_brain.is_git_checkout(root)
-            allow_write = git_ok and (force_write or ((mode == "auto") and rate["allow_promote"]))
+            allow_write = force_write or ((mode == "auto") and rate["allow_promote"])
             downgrade = ""
-            if not git_ok and (force_write or mode == "auto"):
-                downgrade = "brain chưa git → dry-run (bật học/reflect để git-init)"
-            elif mode == "auto" and not force_write and not rate["allow_promote"]:
+            if mode == "auto" and not force_write and not rate["allow_promote"]:
                 downgrade = rate["reason"]
 
             report = await asyncio.to_thread(self._promote_sync, brain, manifest, cfg, caps, allow_write)
