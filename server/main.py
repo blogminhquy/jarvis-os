@@ -1502,6 +1502,10 @@ def _ensure_brain_scaffold(root):
     try:
         import meta_tools
         meta_tools.ensure_meta_tools(str(root))   # skill javis-builder + loop tự-cải-tiến (create-if-missing)
+        # Bộ khung "compounding wiki" phổ quát: schema doc + điều hướng wiki + HANDOFF.
+        # Resolve đúng thư mục wiki hiện có (vd '07 - Wiki') để không tạo 'wiki' trùng.
+        _wd = _resolve_subfolder(str(root), r"^(\d+\s*[-_.]\s*)?wiki$", "wiki")
+        meta_tools.ensure_brain_pattern(str(root), _wd)
     except Exception as e:
         print(f"[meta tools seed] {e}", file=__import__('sys').stderr)
 
