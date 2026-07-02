@@ -348,7 +348,8 @@ class LearnFeature:
                 '"supersedes":"slug-cũ-hoặc-rỗng","confidence":0..3}]')
         if caps.get("wiki"):
             schema_bits.append(
-                '"wiki":[{"title":"Tên Khái Niệm","body":"markdown có [[wikilink]] + citation cuối câu",'
+                '"wiki":[{"title":"Tên Khái Niệm","body":"markdown; MỖI câu cụ thể kết bằng [[nguồn]]; '
+                'số liệu/khẳng định mạnh phải gắn nhãn (mục tiêu) hoặc (thực tế tính đến ...) hoặc (cần xác minh)",'
                 '"provenance":"user|source|assistant","density":0..3,"same_as":"tên-trang-đã-có-hoặc-rỗng",'
                 '"conflict_with":"tên-trang-đã-có-hoặc-rỗng"}]')
         if caps.get("skill"):
@@ -374,7 +375,13 @@ class LearnFeature:
             "DENSITY (wiki, 0-3): 0=nhắc thoáng, 3=được định nghĩa/giải thích có cấu trúc. Chỉ đưa density>=2.\n"
             "DEDUP: đọc INDEX dưới đây trước; nếu khái niệm ĐÃ CÓ → set same_as=tên trang (đừng tạo trùng); "
             "nếu MÂU THUẪN với trang cũ → set conflict_with (KHÔNG ghi đè, sẽ ghi mục ## Mâu thuẫn).\n"
-            "CITATION: mọi câu wiki cụ thể kết bằng [[conversations/" + _today() + "]] hoặc nguồn có tên.\n\n"
+            "3 KỶ LUẬT WIKI (đồng bộ schema vault - áp cho MỌI mục wiki):\n"
+            "  1. CITATION cứng: mọi câu cụ thể (số liệu/quy trình/framework/trích dẫn) PHẢI kết bằng "
+            "[[conversations/" + _today() + "]] hoặc [[nguồn có tên]]. Câu không nguồn = bỏ, đừng đưa vào.\n"
+            "  2. MỤC TIÊU vs THỰC TẾ: câu nói về tương lai/mong muốn → gắn '(mục tiêu)'; hiện trạng đo được "
+            "→ '(thực tế tính đến <thời điểm>)'; không chắc → '(cần xác minh)'. TUYỆT ĐỐI không biến câu tầm nhìn "
+            "thành claim chắc nịch (vd 'đặt mục tiêu 13.500' ≠ 'có 13.500').\n"
+            "  3. MÂU THUẪN: nếu chọi trang cũ → set conflict_with, KHÔNG ghi đè (Python sẽ ghi ## Mâu thuẫn).\n\n"
             + ("TASK (chống spam backlog): CHỈ đề xuất task khi hội thoại có VIỆC RÕ RÀNG chưa làm - "
                "user nhờ lặp lại, việc bỏ dở được nhắc, hoặc câu hỏi mở cần điều tra thêm. intent phải "
                "TỰ-ĐỦ (agent nền chỉ thao tác file, KHÔNG thấy hội thoại này). Đa số batch không có việc "

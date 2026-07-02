@@ -277,18 +277,98 @@ def ensure_brain_pattern(root: str, wiki_dir: str = "") -> dict:
     return {"created": created}
 
 
+_SKILL_INGEST = """---
+name: Ingest Source
+description: Kích hoạt khi người dùng muốn TIÊU HOÁ / xử lý / "ingest" một source vào Second Brain (vd "tiêu hoá source này", "xử lý bài này vào wiki", "đọc file này rồi ghi lại kiến thức", thả file vào sources/). Biến nguồn thô thành tri thức wiki tích luỹ, theo đúng 3 kỷ luật.
+group: AI
+---
+
+# INGEST - tiêu hoá 1 source thành wiki (compounding)
+
+Đọc schema vault (`CLAUDE.md`/`AGENTS.md` ở gốc brain) trước; đây là bản thao tác của phép INGEST.
+
+## Trước khi làm
+- Kiểm frontmatter source: `status: processed` -> DỪNG, báo đã xử lý, hỏi có re-ingest không. `unprocessed`/chưa có -> làm.
+- Phân loại độ dài. Source dài (>= ~10.000 dòng / sách / transcript) -> BẮT BUỘC 3-pass:
+  1. Đọc lướt, lập mục lục theo số dòng (vd "1-1300: giới thiệu"). Báo người dùng xác nhận trọng tâm.
+  2. Đọc sâu từng đoạn ~1.000-1.500 dòng, viết wiki NGAY từng đoạn (đừng nén cả file 1 lần - mất 25-40% chi tiết).
+  3. Tự hỏi 5 câu về các vùng khác nhau; wiki không trả lời được câu nào -> quét bổ sung vùng đó.
+
+## Các bước
+1. Đọc source (kèm ảnh nếu có).
+2. Tóm tắt 3-5 ý chính; rút insight/framework; liên hệ khái niệm đã có.
+3. Xác định trang wiki: mới cần tạo / cần cập nhật / cần merge (đọc `wiki/index.md` để dedup).
+4. Viết/cập nhật wiki (1 trang = 1 ý, có `[[...]]` ngược lại trang liên quan) - TUÂN THỦ 3 KỶ LUẬT:
+   - Citation cứng: mỗi câu cụ thể kết bằng `[[Nguồn]]`.
+   - Mục tiêu vs thực tế: gắn nhãn "(mục tiêu)" / "(thực tế tính đến ...)" / "(cần xác minh)".
+   - Mâu thuẫn với trang cũ: thêm `## Mâu thuẫn` (giữ cả 2 quan điểm + nguồn) + append `wiki/_open-questions.md`, KHÔNG ghi đè.
+5. Cập nhật `wiki/index.md` (thêm dòng link + mô tả 1 dòng).
+6. Set source `status: processed`, `processed_at`, `wiki_links: [...]`. Không đáng vào wiki -> `status: skipped` + `note`.
+7. Append `wiki/log.md`: `## [YYYY-MM-DD] ingest | <tên source>` + nguồn/đã tạo/đã cập nhật/insight.
+8. Đề xuất task nếu source mở ra hành động (chỉ đề xuất). Báo cáo ngắn: tóm tắt + trang đã chạm + insight + task.
+"""
+
+_SKILL_QUERY = """---
+name: Query Wiki
+description: Kích hoạt khi người dùng hỏi/khai thác tri thức trong Second Brain (tổng hợp, so sánh, giả thuyết, liệt kê, trực quan hoá) - vd "tổng hợp các framework về X", "so sánh A vs B vs C", "wiki có gì về Y". Trả lời có trích dẫn và lưu lại kết quả giá trị.
+group: AI
+---
+
+# QUERY - trả lời từ wiki (có citation, compounding)
+
+1. Đọc `wiki/index.md` TRƯỚC để biết có trang nào.
+2. Đọc các trang wiki liên quan (theo nhóm/tên); đọc trang được `[[link]]` tới nếu cần đủ context.
+3. Thiếu -> đọc `sources/` tương ứng. Vẫn thiếu -> append 1 dòng vào `wiki/_open-questions.md`.
+4. Trả lời có `[[citation]]` cho mọi khẳng định cụ thể. Nói rõ chỗ nào wiki chưa cover thay vì bịa.
+5. Nếu câu trả lời có GIÁ TRỊ TÁI DÙNG (so sánh, phân tích, mapping mới) -> đề xuất lưu thành 1 trang wiki mới (compounding: khám phá cũng tích luỹ vào bộ não, không tan vào lịch sử chat).
+
+7 dạng câu hỏi chất lượng cao: Tổng hợp (bảng so sánh) · So sánh 3+ (ma trận) · Giả thuyết (phân tích ảnh hưởng) · Gán nhãn/liệt kê · Trực quan hoá (canvas/sơ đồ) · Dịch/chuyển ngữ · Tự kiểm gap (append open-questions).
+"""
+
+_SKILL_LINT = """---
+name: Lint Wiki
+description: Kích hoạt khi người dùng muốn kiểm tra sức khoẻ / dọn dẹp wiki của Second Brain (vd "health check wiki", "lint wiki", "wiki có lỗi gì không", "rà soát bộ não"). CHỈ trả về danh sách vấn đề, KHÔNG tự sửa hàng loạt.
+group: AI
+---
+
+# LINT - health-check wiki (chỉ CHECKLIST)
+
+Quét `wiki/` phát hiện 8 loại vấn đề:
+1. Mâu thuẫn giữa các trang (gồm section `## Mâu thuẫn` ghi nhận trước mà chưa giải).
+2. Stale claim (trang cũ chưa cập nhật theo source mới).
+3. Orphan (không có inbound `[[link]]`).
+4. Missing (khái niệm nhắc nhiều nơi nhưng chưa có trang riêng).
+5. Broken `[[wikilink]]` (trỏ file không tồn tại).
+6. Trùng lặp (2 trang gần giống -> đề xuất merge).
+7. Gap (vùng kiến thức mỏng, cần thêm source / web search).
+8. Open-question tồn lâu trong `wiki/_open-questions.md`.
+
+NGUYÊN TẮC VÀNG: chỉ TRẢ VỀ DANH SÁCH có đánh số. TUYỆT ĐỐI KHÔNG tự sửa 50 chỗ một lúc. Người dùng ưu tiên rồi ra lệnh sửa từng cái (tránh mất kiểm soát audit).
+"""
+
+# Skill seed create-if-missing (slug -> nội dung SKILL.md)
+_SEED_SKILLS = {
+    "javis-builder": _SKILL_BUILDER,
+    "ingest-source": _SKILL_INGEST,
+    "query-wiki": _SKILL_QUERY,
+    "lint-wiki": _SKILL_LINT,
+}
+
+
 def ensure_meta_tools(root: str) -> dict:
-    """Seed skill javis-builder + loop tự-cải-tiến vào brain (create-if-missing). Trả {created:[...]}."""
+    """Seed skill meta (javis-builder + INGEST/QUERY/LINT) + loop tự-cải-tiến vào brain
+    (create-if-missing). Trả {created:[...]}."""
     root = Path(root)
     created = []
-    try:
-        sk = root / ".claude" / "skills" / "javis-builder" / "SKILL.md"
-        if not sk.exists():
-            sk.parent.mkdir(parents=True, exist_ok=True)
-            sk.write_text(_SKILL_BUILDER, encoding="utf-8")
-            created.append("skill:javis-builder")
-    except Exception as e:
-        print(f"[meta seed skill] {e}", file=__import__('sys').stderr)
+    for slug, content in _SEED_SKILLS.items():
+        try:
+            sk = root / ".claude" / "skills" / slug / "SKILL.md"
+            if not sk.exists():
+                sk.parent.mkdir(parents=True, exist_ok=True)
+                sk.write_text(content, encoding="utf-8")
+                created.append(f"skill:{slug}")
+        except Exception as e:
+            print(f"[meta seed skill {slug}] {e}", file=__import__('sys').stderr)
     try:
         lp = root / "Javis" / "loops" / "tu-cai-tien-javis.md"
         if not lp.exists():
